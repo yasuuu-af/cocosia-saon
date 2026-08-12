@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CoCosia【ココシア】リラクゼーションサロン｜北千住</title>
+<meta name="description" content="北千住東口徒歩3分のリラクゼーションサロンCoCosia（ここしあ）。アロマトリートメント・毛穴洗浄・あかすり。完全個室・シャワー完備・24時まで営業。ネット予約24時間受付中。">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Noto+Serif+JP:wght@200;300;400&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #f8f3ec;
+    --warm-white: #faf7f2;
+    --sand: #e8dcc8;
+    --taupe: #c8b49a;
+    --clay: #a07858;
+    --earth: #7a5c40;
+    --bark: #4a3020;
+    --sage: #8a9e7a;
+    --sage-light: #c2d0b4;
+    --line-green: #06c755;
+    --text-dark: #2e1f10;
+    --text-mid: #6a4e35;
+    --text-light: #9a7e65;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background-color: var(--warm-white);
+    color: var(--text-dark);
+    font-weight: 300;
+  }
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.2rem 3rem;
+    background: rgba(250,247,242,0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--sand);
+  }
+  .nav-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.6rem;
+    font-weight: 300;
+    letter-spacing: 0.12em;
+    color: var(--bark);
+    text-decoration: none;
+  }
+  .nav-logo span {
+    font-style: italic;
+    color: var(--clay);
+  }
+  .nav-links {
+    display: flex;
+    gap: 2.2rem;
+    list-style: none;
+    align-items: center;
+  }
+  .nav-links a {
+    text-decoration: none;
+    color: var(--text-mid);
+    font-size: 0.78rem;
+    letter-spacing: 0.15em;
+    transition: color 0.3s;
+  }
+  .nav-links a:hover { color: var(--clay); }
+  .nav-reserve {
+    background: var(--earth);
+    color: white !important;
+    padding: 0.55rem 1.4rem;
+    border-radius: 2px;
+    font-size: 0.75rem !important;
+    letter-spacing: 0.12em;
+    transition: background 0.3s !important;
+  }
+  .nav-reserve:hover { background: var(--bark) !important; color: white; }
+  /* HERO */
+  .hero {
+    height: 100vh;
+    min-height: 640px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: linear-gradient(160deg, #f0e8d8 0%, #e4d5bc 40%, #d4c4a4 100%);
+  }
+  .hero-bg-circle {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.18;
+  }
+  .hero-bg-circle:nth-child(1) {
+    width: 700px; height: 700px;
+    top: -200px; right: -100px;
+    background: radial-gradient(circle, var(--sage-light), transparent 70%);
+  }
+  .hero-bg-circle:nth-child(2) {
+    width: 500px; height: 500px;
+    bottom: -150px; left: -100px;
+    background: radial-gradient(circle, var(--taupe), transparent 70%);
+  }
+  .hero-content {
+    text-align: center;
+    position: relative;
+    z-index: 2;
+    animation: fadeUp 1.2s ease both;
+    padding: 0 1.2rem;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .hero-sub {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.95rem;
+    letter-spacing: 0.35em;
+    color: var(--clay);
+    margin-bottom: 1.2rem;
+    text-transform: uppercase;
+  }
+  .hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(3.5rem, 8vw, 6.5rem);
+    font-weight: 300;
+    letter-spacing: 0.08em;
+    color: var(--bark);
+    line-height: 1.1;
+    margin-bottom: 0.3rem;
+  }
+  .hero-title-jp {
+    font-family: 'Noto Serif JP', serif;
+    font-size: clamp(1rem, 2.5vw, 1.4rem);
+    font-weight: 200;
+    letter-spacing: 0.5em;
+    color: var(--text-mid);
+    margin-bottom: 2rem;
+  }
+  .hero-tagline {
+    font-size: 0.85rem;
+    letter-spacing: 0.2em;
+    color: var(--text-light);
+    margin-bottom: 3rem;
+    line-height: 2;
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255,255,255,0.5);
+    border: 1px solid var(--taupe);
+    border-radius: 40px;
+    padding: 0.4rem 1.2rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    color: var(--earth);
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .star { color: #d4a042; }
+  .hero-btns {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .btn-primary {
+    background: var(--earth);
+    color: white;
+    padding: 0.9rem 2.2rem;
+    border-radius: 3px;
+    text-decoration: none;
+    font-size: 0.82rem;
+    letter-spacing: 0.2em;
+    transition: all 0.3s;
+    border: 1px solid var(--earth);
+  }
+  .btn-primary:hover {
+    background: var(--bark);
+    border-color: var(--bark);
+  }
+  .btn-outline {
+    background: transparent;
+    color: var(--earth);
+    padding: 0.9rem 2.2rem;
+    border-radius: 3px;
+    text-decoration: none;
+    font-size: 0.82rem;
+    letter-spacing: 0.2em;
+    transition: all 0.3s;
+    border: 1px solid var(--clay);
+  }
+  .btn-outline:hover {
+    background: var(--earth);
+    color: white;
+    border-color: var(--earth);
+  }
+  .scroll-hint {
+    position: absolute;
+    bottom: 2.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-light);
+    font-size: 0.68rem;
+    letter-spacing: 0.2em;
+    animation: bounce 2s ease-in-out infinite;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(6px); }
+  }
+  .scroll-line {
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(to bottom, var(--clay), transparent);
+  }
+  /* SECTION COMMON */
+  section { padding: 6rem 2rem; scroll-margin-top: 70px; }
+  .section-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.4em;
+    color: var(--clay);
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+  }
+  .section-title {
+    font-family: 'Noto Serif JP', serif;
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 300;
+    letter-spacing: 0.15em;
+    color: var(--bark);
+    margin-bottom: 1.2rem;
+    line-height: 1.5;
+  }
+  .section-divider {
+    width: 40px;
+    height: 1px;
+    background: var(--clay);
+    margin-bottom: 2rem;
+  }
+  .section-text {
+    font-size: 0.88rem;
+    line-height: 2.2;
+    color: var(--text-mid);
+    max-width: 560px;
+  }
+  /* ABOUT */
+  .about {
+    background: var(--cream);
+    max-width: 1100px;
+    margin: 0 auto;
+    border-radius: 4px;
+  }
+  .about-inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5rem;
+    align-items: center;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 5rem 3rem;
+  }
+  .about-visual { position: relative; }
+  .about-card {
+    background: white;
+    border-radius: 4px;
+    padding: 2.5rem;
+    box-shadow: 0 4px 30px rgba(74,48,32,0.08);
+    position: relative;
+    overflow: hidden;
+  }
+  .about-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: linear-gradient(to bottom, var(--sage), var(--clay));
+  }
+  .about-card-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+  .about-card h3 {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 1rem;
+    font-weight: 300;
+    letter-spacing: 0.15em;
+    color: var(--bark);
+    margin-bottom: 0.8rem;
+  }
+  .about-card p {
+    font-size: 0.82rem;
+    line-height: 2;
+    color: var(--text-light);
+  }
+  .about-card-accent {
+    position: absolute;
+    bottom: -20px; right: -20px;
+    width: 100px; height: 100px;
+    background: radial-gradient(circle, var(--sand), transparent);
+    border-radius: 50%;
+    opacity: 0.5;
+  }
+  .owner-message {
+    background: var(--warm-white);
+    border: 1px solid var(--sand);
+    border-radius: 4px;
+    padding: 1.8rem;
+    margin-top: 2rem;
+    font-size: 0.82rem;
+    line-height: 2.2;
+    color: var(--text-mid);
+    position: relative;
+  }
+  .owner-message::before {
+    content: '"';
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 4rem;
+    color: var(--sand);
+    position: absolute;
+    top: -0.5rem; left: 1rem;
+    line-height: 1;
+  }
+  .owner-name {
+    margin-top: 1rem;
+    font-size: 0.78rem;
+    color: var(--text-light);
+    letter-spacing: 0.1em;
+  }
+  /* MENU */
+  .menu-section { background: var(--warm-white); }
+  .menu-inner { max-width: 1000px; margin: 0 auto; }
+  .menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 3rem;
+  }
+  .menu-card {
+    background: white;
+    border-radius: 4px;
+    padding: 2rem;
+    border: 1px solid var(--sand);
+    transition: transform 0.3s, box-shadow 0.3s;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .menu-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(74,48,32,0.1);
+  }
+  .menu-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(to right, var(--sage), var(--clay));
+    transform: scaleX(0);
+    transition: transform 0.3s;
+  }
+  .menu-card:hover::after { transform: scaleX(1); }
+  .menu-badge {
+    display: inline-block;
+    background: var(--cream);
+    color: var(--clay);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    padding: 0.25rem 0.7rem;
+    border-radius: 2px;
+    margin-bottom: 1rem;
+    border: 1px solid var(--taupe);
+    align-self: flex-start;
+  }
+  .menu-card h3 {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 1rem;
+    font-weight: 300;
+    letter-spacing: 0.1em;
+    color: var(--bark);
+    margin-bottom: 0.6rem;
+    line-height: 1.6;
+  }
+  .menu-card p {
+    font-size: 0.78rem;
+    color: var(--text-light);
+    line-height: 1.9;
+    margin-bottom: 1.2rem;
+  }
+  .menu-price {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem;
+    font-weight: 400;
+    color: var(--earth);
+    letter-spacing: 0.05em;
+  }
+  .menu-price span {
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.75rem;
+    color: var(--text-light);
+    margin-left: 0.3rem;
+  }
+  .menu-note {
+    font-size: 0.7rem;
+    color: var(--sage);
+    margin-top: 0.3rem;
+    letter-spacing: 0.05em;
+  }
+  .menu-card-cta {
+    margin-top: auto;
+    padding-top: 1.2rem;
+  }
+  .menu-card-cta a {
+    display: inline-block;
+    font-size: 0.72rem;
+    letter-spacing: 0.15em;
+    color: var(--clay);
+    text-decoration: none;
+    border-bottom: 1px solid var(--sand);
+    padding-bottom: 0.2rem;
+    transition: all 0.3s;
+  }
+  .menu-card-cta a:hover {
+    color: var(--earth);
+    border-color: var(--clay);
+  }
+  /* FEATURES */
+  .features { background: var(--cream); }
+  .features-inner { max-width: 1000px; margin: 0 auto; }
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.2rem;
+    margin-top: 3rem;
+  }
+  .feature-item {
+    text-align: center;
+    padding: 2rem 1rem;
+    background: white;
+    border-radius: 4px;
+    border: 1px solid var(--sand);
+    transition: transform 0.3s;
+  }
+  .feature-item:hover { transform: translateY(-3px); }
+  .feature-icon {
+    font-size: 1.8rem;
+    margin-bottom: 0.8rem;
+    display: block;
+  }
+  .feature-item h4 {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 0.85rem;
+    font-weight: 300;
+    letter-spacing: 0.12em;
+    color: var(--bark);
+    margin-bottom: 0.5rem;
+  }
+  .feature-item p {
+    font-size: 0.72rem;
+    color: var(--text-light);
+    line-height: 1.8;
+  }
+  /* ===== RESERVE（予約セクション）===== */
+  .reserve-section {
+    background: var(--warm-white);
+  }
+  .reserve-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .reserve-inner .section-divider { margin: 0 auto 2rem; }
+  .reserve-lead {
+    font-size: 0.88rem;
+    line-height: 2.2;
+    color: var(--text-mid);
+    margin-bottom: 3rem;
+  }
+  .reserve-steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.2rem;
+    margin-bottom: 3rem;
+  }
+  .reserve-step {
+    background: white;
+    border: 1px solid var(--sand);
+    border-radius: 4px;
+    padding: 2rem 1.2rem;
+    position: relative;
+  }
+  .reserve-step-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.2rem;
+    font-weight: 300;
+    color: var(--taupe);
+    line-height: 1;
+    margin-bottom: 0.8rem;
+  }
+  .reserve-step h4 {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 0.88rem;
+    font-weight: 300;
+    letter-spacing: 0.12em;
+    color: var(--bark);
+    margin-bottom: 0.6rem;
+  }
+  .reserve-step p {
+    font-size: 0.74rem;
+    color: var(--text-light);
+    line-height: 1.9;
+  }
+  .reserve-panel {
+    background: var(--cream);
+    border: 1px solid var(--sand);
+    border-radius: 4px;
+    padding: 3rem 2rem;
+  }
+  .reserve-panel-title {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 1.1rem;
+    font-weight: 300;
+    letter-spacing: 0.15em;
+    color: var(--bark);
+    margin-bottom: 0.8rem;
+  }
+  .reserve-panel-sub {
+    font-size: 0.78rem;
+    color: var(--text-light);
+    letter-spacing: 0.1em;
+    line-height: 2;
+    margin-bottom: 2rem;
+  }
+  .reserve-btns {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .btn-reserve-main {
+    background: var(--earth);
+    color: white;
+    padding: 1.1rem 2.8rem;
+    border-radius: 3px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    letter-spacing: 0.2em;
+    transition: all 0.3s;
+    border: 1px solid var(--earth);
+  }
+  .btn-reserve-main:hover {
+    background: var(--bark);
+    border-color: var(--bark);
+    transform: translateY(-2px);
+  }
+  .btn-line {
+    background: var(--line-green);
+    color: white;
+    padding: 1.1rem 2.4rem;
+    border-radius: 3px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    letter-spacing: 0.15em;
+    transition: all 0.3s;
+    border: 1px solid var(--line-green);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .btn-line:hover {
+    background: #05a948;
+    border-color: #05a948;
+    transform: translateY(-2px);
+  }
+  .btn-tel {
+    background: transparent;
+    color: var(--earth);
+    padding: 1.1rem 2.2rem;
+    border-radius: 3px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    letter-spacing: 0.15em;
+    border: 1px solid var(--clay);
+    transition: all 0.3s;
+    display: inline-block;
+  }
+  .btn-tel:hover {
+    background: var(--earth);
+    color: white;
+    border-color: var(--earth);
+    transform: translateY(-2px);
+  }
+  .reserve-notes {
+    margin-top: 2rem;
+    font-size: 0.72rem;
+    color: var(--text-light);
+    line-height: 2;
+    letter-spacing: 0.05em;
+  }
+  /* LINE QRコード */
+  .reserve-qr-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+  .reserve-qr {
+    background: white;
+    border: 1px solid var(--sand);
+    border-radius: 4px;
+    padding: 1rem 1rem 0.7rem;
+  }
+  .reserve-qr img {
+    display: block;
+    width: 190px;
+    height: 190px;
+  }
+  .qr-caption {
+    font-size: 0.68rem;
+    color: var(--text-light);
+    letter-spacing: 0.08em;
+    margin-top: 0.6rem;
+  }
+  .reserve-qr-text {
+    max-width: 320px;
+    text-align: left;
+  }
+  .reserve-qr-text p {
+    font-size: 0.8rem;
+    line-height: 2.1;
+    color: var(--text-mid);
+    margin-bottom: 1.5rem;
+  }
+  .reserve-qr-text .reserve-btns { justify-content: flex-start; }
+  /* REVIEWS */
+  .reviews { background: var(--cream); }
+  .reviews-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .reviews-score {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin: 2rem 0 3rem;
+  }
+  .score-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 4rem;
+    font-weight: 300;
+    color: var(--bark);
+    line-height: 1;
+  }
+  .score-detail { text-align: left; }
+  .score-stars {
+    color: #d4a042;
+    font-size: 1.2rem;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.3rem;
+  }
+  .score-count {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    letter-spacing: 0.1em;
+  }
+  .review-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.2rem;
+    text-align: left;
+  }
+  .review-cta {
+    margin-top: 2.5rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .review-card {
+    background: white;
+    border-radius: 4px;
+    padding: 2rem;
+    border: 1px solid var(--sand);
+    text-align: left;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .review-card::before {
+    content: '❝';
+    font-size: 2rem;
+    color: var(--sand);
+    position: absolute;
+    top: 1rem; right: 1.5rem;
+  }
+  .review-stars { color: #d4a042; font-size: 0.85rem; margin-bottom: 0.8rem; }
+  .review-text {
+    font-size: 0.83rem;
+    line-height: 2;
+    color: var(--text-mid);
+    margin-bottom: 1rem;
+  }
+  .review-meta {
+    font-size: 0.72rem;
+    color: var(--text-light);
+    letter-spacing: 0.08em;
+  }
+  /* INFO */
+  .info-section { background: var(--warm-white); }
+  .info-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+  }
+  .info-table { width: 100%; border-collapse: collapse; }
+  .info-table tr { border-bottom: 1px solid var(--sand); }
+  .info-table td {
+    padding: 1rem 0;
+    font-size: 0.82rem;
+    vertical-align: top;
+  }
+  .info-table td:first-child {
+    color: var(--text-light);
+    letter-spacing: 0.08em;
+    width: 35%;
+    font-size: 0.75rem;
+  }
+  .info-table td:last-child {
+    color: var(--text-mid);
+    line-height: 1.8;
+  }
+  .access-box {
+    background: var(--cream);
+    border-radius: 4px;
+    padding: 2rem;
+    border: 1px solid var(--sand);
+    margin-top: 1.5rem;
+  }
+  .access-box h4 {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 0.88rem;
+    font-weight: 300;
+    letter-spacing: 0.12em;
+    color: var(--bark);
+    margin-bottom: 1rem;
+  }
+  .access-box p {
+    font-size: 0.78rem;
+    color: var(--text-light);
+    line-height: 2;
+  }
+  .map-embed {
+    width: 100%;
+    margin-top: 1rem;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid var(--sand);
+    line-height: 0;
+  }
+  .map-embed iframe {
+    width: 100%;
+    height: 300px;
+    display: block;
+  }
+  /* CTA */
+  .cta {
+    background: linear-gradient(135deg, var(--earth) 0%, var(--bark) 100%);
+    text-align: center;
+    padding: 6rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .cta::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -10%;
+    width: 120%; height: 200%;
+    background: radial-gradient(ellipse, rgba(255,255,255,0.05) 0%, transparent 60%);
+  }
+  .cta > * { position: relative; z-index: 1; }
+  .cta-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.4em;
+    color: var(--taupe);
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  .cta-title {
+    font-family: 'Noto Serif JP', serif;
+    font-size: clamp(1.5rem, 4vw, 2.2rem);
+    font-weight: 200;
+    letter-spacing: 0.2em;
+    color: white;
+    margin-bottom: 1rem;
+    line-height: 1.6;
+  }
+  .cta-sub {
+    font-size: 0.82rem;
+    color: var(--taupe);
+    letter-spacing: 0.15em;
+    margin-bottom: 2.5rem;
+  }
+  .cta-btns {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .btn-white {
+    background: white;
+    color: var(--earth);
+    padding: 1rem 2.5rem;
+    border-radius: 3px;
+    text-decoration: none;
+    font-size: 0.82rem;
+    letter-spacing: 0.2em;
+    transition: all 0.3s;
+    border: 1px solid white;
+    font-weight: 400;
+  }
+  .btn-white:hover { background: transparent; color: white; }
+  .btn-ghost {
+    background: transparent;
+    color: white;
+    padding: 1rem 2.5rem;
+    border-radius: 3px;
+    text-decoration: none;
+    font-size: 0.82rem;
+    letter-spacing: 0.2em;
+    transition: all 0.3s;
+    border: 1px solid rgba(255,255,255,0.5);
+  }
+  .btn-ghost:hover { background: rgba(255,255,255,0.1); }
+  /* FOOTER */
+  footer {
+    background: var(--bark);
+    padding: 3rem 2rem 2rem;
+    text-align: center;
+  }
+  .footer-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
+    font-weight: 300;
+    color: var(--taupe);
+    letter-spacing: 0.12em;
+    margin-bottom: 0.3rem;
+  }
+  .footer-logo span { font-style: italic; }
+  .footer-sub {
+    font-size: 0.72rem;
+    letter-spacing: 0.25em;
+    color: rgba(200,180,154,0.5);
+    margin-bottom: 1.5rem;
+  }
+  .footer-links {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    list-style: none;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+  .footer-links a {
+    text-decoration: none;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    color: rgba(200,180,154,0.6);
+    transition: color 0.3s;
+  }
+  .footer-links a:hover { color: var(--taupe); }
+
+  .footer-sns {
+    display: flex;
+    gap: 1.1rem;
+    justify-content: center;
+    margin-bottom: 1.6rem;
+  }
+  .footer-sns a {
+    width: 38px; height: 38px;
+    border: 1px solid rgba(200,180,154,0.35);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.3s;
+  }
+  .footer-sns a:hover {
+    border-color: var(--taupe);
+    background: rgba(200,180,154,0.12);
+  }
+  .footer-sns svg { width: 16px; height: 16px; fill: rgba(200,180,154,0.75); }
+  .footer-sns a:hover svg { fill: var(--taupe); }
+  .footer-tel {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.15rem;
+    letter-spacing: 0.12em;
+    color: var(--taupe);
+    text-decoration: none;
+    display: inline-block;
+    margin-bottom: 1.4rem;
+  }
+  .footer-tel:hover { color: #e8dcc8; }
+  .footer-copy {
+    font-size: 0.68rem;
+    color: rgba(200,180,154,0.35);
+    letter-spacing: 0.1em;
+  }
+  /* スマホ用 固定予約バー */
+  .mobile-bar {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 99;
+    background: rgba(250,247,242,0.96);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid var(--sand);
+    padding: 0.7rem 0.8rem;
+    gap: 0.6rem;
+  }
+  .mobile-bar a {
+    flex: 1;
+    text-align: center;
+    padding: 0.85rem 0.5rem;
+    border-radius: 3px;
+    text-decoration: none;
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+  }
+  .mobile-bar .mb-reserve { background: var(--earth); color: white; }
+  .mobile-bar .mb-line { background: var(--line-green); color: white; }
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    nav { padding: 1rem 1.2rem; }
+    .nav-links { display: none; }
+    .about-inner { grid-template-columns: 1fr; gap: 2rem; padding: 3rem 1.5rem; }
+    .info-inner { grid-template-columns: 1fr; gap: 2rem; }
+    section { padding: 4rem 1.2rem; }
+    .reserve-panel { padding: 2rem 1.2rem; }
+    .btn-reserve-main, .btn-line { width: 100%; justify-content: center; text-align: center; }
+    .mobile-bar { display: flex; }
+    body { padding-bottom: 4.2rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     ▼▼▼ 設定はここだけ変えればOK ▼▼▼
+     LINE_URL       … LINE公式アカウントのURL
+     GOOGLE_REVIEWS … Googleクチコミ一覧のURL
+     GOOGLE_WRITE   … クチコミ投稿ページのURL
+     TEL            … 電話番号（空欄なら電話の案内は非表示）
+     ============================================================ -->
+<script>
+  const SITE_CONFIG = {
+    LINE_URL:   "https://page.line.me/756assva?openQrModal=true",
+    GOOGLE_REVIEWS: "https://www.google.com/maps?cid=11824116614626448226",
+    GOOGLE_WRITE:   "https://search.google.com/local/writereview?placeid=&cid=11824116614626448226",
+    TEL:        "080-5523-9301"
+  };
+  const QR_SRC = "data:image/png;base64,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";
+</script>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="nav-logo">Co<span>Co</span>sia</a>
+  <ul class="nav-links">
+    <li><a href="#about">サロンについて</a></li>
+    <li><a href="#menu">メニュー</a></li>
+    <li><a href="#features">こだわり</a></li>
+    <li><a href="#reviews">口コミ</a></li>
+    <li><a href="blog.html">ブログ</a></li>
+    <li><a href="#info">アクセス</a></li>
+    <li><a href="#reserve" class="nav-reserve">予約する</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg-circle"></div>
+  <div class="hero-bg-circle"></div>
+  <div class="hero-content">
+    <p class="hero-sub">Relaxation Salon</p>
+    <h1 class="hero-title">CoCosia</h1>
+    <p class="hero-title-jp">ここしあ</p>
+    <div class="hero-badge">
+      <span class="star">★</span>
+      <span>5.0 （Googleクチコミ12件）</span>
+      <span>｜</span>
+      <span>北千住東口 徒歩3分</span>
+    </div>
+    <p class="hero-tagline">
+      アロマの香りに包まれた、完全個室の癒し空間<br>
+      毎日頑張るあなたへ、ご褒美の時間を
+    </p>
+    <div class="hero-btns">
+      <a href="#reserve" class="btn-primary">LINEでご予約</a>
+      <a href="#menu" class="btn-outline">メニューを見る</a>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    <div class="scroll-line"></div>
+    <span>SCROLL</span>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about" style="padding:0;">
+  <div class="about" style="max-width:100%; border-radius:0;">
+    <div class="about-inner">
+      <div>
+        <p class="section-label">About</p>
+        <h2 class="section-title">毎日頑張る<br>あなたへ</h2>
+        <div class="section-divider"></div>
+        <p class="section-text">
+          アロマトリートメントに加え、毛穴洗浄や皮脂ケア、毛髪促進など<br>
+          気になる"清潔感ケア"をまとめて叶えるサロン。<br><br>
+          あかすりで背中や皮膚のザラつきも改善。<br>
+          完全個室空間で、人目を気にせずリフレッシュできます。<br><br>
+          メニューは60分〜180分の中で、<br>お悩みや体の状態に合わせて組み合わせ可能です。
+        </p>
+        <div class="owner-message">
+          毎日頑張っている皆様へ。健康と美容をサポートしたい思いを持ちつづけ、皆様のおかげさまで、3周年を迎えることができました。ご縁を大事に、皆さまが少しでもホッと一息つき幸せな時間を過ごせますように。
+          <p class="owner-name">— オーナー　五十嵐 唯</p>
+        </div>
+      </div>
+      <div class="about-visual">
+        <div class="about-card">
+          <div class="about-card-icon">🌿</div>
+          <h3>アロマトリートメント</h3>
+          <p>数種類のアロマオイルからお選びいただけます。熟練の手技で凝り固まった体をじっくりとほぐします。</p>
+          <div class="about-card-accent"></div>
+        </div>
+        <div class="about-card" style="margin-top:1rem;">
+          <div class="about-card-icon">✨</div>
+          <h3>完全個室・シャワー完備</h3>
+          <p>完全個室でプライベートな空間。シャワー完備なので仕事帰りでもそのままお越しいただけます。</p>
+          <div class="about-card-accent"></div>
+        </div>
+        <div class="about-card" style="margin-top:1rem;">
+          <div class="about-card-icon">🌙</div>
+          <h3>24時まで営業</h3>
+          <p>残業帰りでも間に合う夜遅くまでの営業。当日受付もOKです。</p>
+          <div class="about-card-accent"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MENU -->
+<section id="menu" class="menu-section">
+  <div class="menu-inner">
+    <p class="section-label">Menu</p>
+    <h2 class="section-title">メニュー・料金</h2>
+    <div class="section-divider"></div>
+    <div class="menu-grid">
+      <div class="menu-card">
+        <span class="menu-badge">全員対象</span>
+        <h3>【アロマ】全身癒し♪<br>お悩み別オーダーメイド</h3>
+        <p>ボディトリートメント＋ボディケア＋ヘッド。お悩みに合わせてカスタマイズ。</p>
+        <div class="menu-price">¥9,900<span>（90分）</span></div>
+        <div class="menu-card-cta"><a href="#reserve">このメニューをLINEで予約 →</a></div>
+      </div>
+      <div class="menu-card">
+        <span class="menu-badge">全員対象</span>
+        <h3>【アロマ】全身癒し♪<br>お悩み別オーダーメイド</h3>
+        <p>ボディトリートメント＋ボディケア＋ヘッド。じっくりたっぷりコース。</p>
+        <div class="menu-price">¥12,500<span>（120分）</span></div>
+        <div class="menu-card-cta"><a href="#reserve">このメニューをLINEで予約 →</a></div>
+      </div>
+      <div class="menu-card">
+        <span class="menu-badge">全員対象</span>
+        <h3>全身すっきり！<br>あかすり＋全身保湿ケア</h3>
+        <p>12時〜20時限定。背中や皮膚のザラつきをしっかりケア。保湿まで丁寧に。</p>
+        <div class="menu-price">¥12,900<span>（120分）</span></div>
+        <div class="menu-card-cta"><a href="#reserve">このメニューをLINEで予約 →</a></div>
+      </div>
+      <div class="menu-card">
+        <span class="menu-badge">全員対象</span>
+        <h3>【毛穴洗浄×美白】<br>エクソソーム導入</h3>
+        <p>鼻の黒ずみ解消。ヒト幹細胞エクソソーム美容液で毛穴ケアと美白を同時に。</p>
+        <div class="menu-price">¥9,800<span>（60分）</span></div>
+        <div class="menu-card-cta"><a href="#reserve">このメニューをLINEで予約 →</a></div>
+      </div>
+      <div class="menu-card">
+        <span class="menu-badge">全員対象</span>
+        <h3>【本格育毛促進】<br>髪の密度UP・毛根活性</h3>
+        <p>エクソソーム配合美容液＋熟練のハンド技術で頭皮環境を整え美髪へ。</p>
+        <div class="menu-price">¥9,800<span>（60分）</span></div>
+        <div class="menu-card-cta"><a href="#reserve">このメニューをLINEで予約 →</a></div>
+      </div>
+      <div class="menu-card">
+        <span class="menu-badge">全員対象</span>
+        <h3>【痩身・フェイシャル】<br>全身マシンコース</h3>
+        <p>全身のボディラインと美顔を同時にアプローチ。</p>
+        <div class="menu-price">¥15,800<span>（120分）</span></div>
+        <p class="menu-note">通常 ¥20,000</p>
+        <div class="menu-card-cta"><a href="#reserve">このメニューをLINEで予約 →</a></div>
+      </div>
+      <div class="menu-card">
+        <span class="menu-badge">スタンダード</span>
+        <h3>【ストレッチ＋もみほぐし】<br>全身すっきりコース</h3>
+        <p>リンパの流れを意識した独自の手技と丁寧なストレッチで、むくみ・疲れ・こわばりをまとめてケア。体が硬い方や、マッサージが初めての方にも安心してお受けいただけます。</p>
+        <div class="menu-price">¥9,000<span>（90分）</span></div>
+        <div class="menu-card-cta"><a href="#reserve">このメニューをLINEで予約 →</a></div>
+      </div>
+      <div class="menu-card">
+        <span class="menu-badge">全員対象</span>
+        <h3>【本格火罐カッピング】<br>＋選べるオプション</h3>
+        <p>火を使って陰圧をつくる本格火罐（ひかん）で、深部の血流とリンパの滞りを一気に解放。その後は揉みほぐし・オイルトリートメント・毛穴フェイシャルの中からお好みで組み合わせ可能。肩こり・腰痛・疲労回復に。</p>
+        <div class="menu-price">¥7,900<span>（60分）</span></div>
+        <div class="menu-card-cta"><a href="#reserve">このメニューをLINEで予約 →</a></div>
+      </div>
+    </div>
+    <p style="margin-top:2rem; font-size:0.75rem; color:var(--text-light); text-align:center; letter-spacing:0.1em;">
+      ※ メニューは60〜180分の範囲でお悩みに合わせて組み合わせ可能です。詳細はお問い合わせください。
+    </p>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features" class="features">
+  <div class="features-inner">
+    <p class="section-label">Features</p>
+    <h2 class="section-title">ここで生まれる<br>こだわりの時間</h2>
+    <div class="section-divider"></div>
+    <div class="features-grid">
+      <div class="feature-item">
+        <span class="feature-icon">🏠</span>
+        <h4>完全個室</h4>
+        <p>人目を気にせず、完全プライベートな空間でゆったりと過ごせます</p>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">🚿</span>
+        <h4>シャワー完備</h4>
+        <p>手ぶらでOK。仕事帰りでもそのままお越しいただけます</p>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">🌙</span>
+        <h4>24時まで営業</h4>
+        <p>残業帰りでも間に合う。夜遅くまで対応しています</p>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">👨</span>
+        <h4>メンズOK</h4>
+        <p>男性のお客様にも安心してご利用いただける環境を整えています</p>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">📅</span>
+        <h4>当日受付OK</h4>
+        <p>急な思い立ちでも大丈夫。当日のご予約も受け付けています</p>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">☕</span>
+        <h4>ドリンクサービス</h4>
+        <p>施術の前後にドリンクをご用意。リラックスした時間をお楽しみください</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== RESERVE（予約セクション）===== -->
+<section id="reserve" class="reserve-section">
+  <div class="reserve-inner">
+    <p class="section-label">Reservation</p>
+    <h2 class="section-title">ご予約について</h2>
+    <div class="section-divider"></div>
+    <p class="reserve-lead">
+      ご予約はLINEから24時間受付中。<br>
+      トークで日時をお送りいただくだけで、折り返しご案内いたします。
+    </p>
+
+    <div class="reserve-steps">
+      <div class="reserve-step">
+        <div class="reserve-step-num">01</div>
+        <h4>LINEで友だち追加</h4>
+        <p>下のボタン、またはQRコードから友だち追加してください</p>
+      </div>
+      <div class="reserve-step">
+        <div class="reserve-step-num">02</div>
+        <h4>ご希望をトークで送信</h4>
+        <p>ご希望のメニューと日時の候補をお送りください</p>
+      </div>
+      <div class="reserve-step">
+        <div class="reserve-step-num">03</div>
+        <h4>予約確定</h4>
+        <p>空き状況を確認のうえ、こちらから確定のご連絡をいたします</p>
+      </div>
+    </div>
+
+    <div class="reserve-panel">
+      <p class="reserve-panel-title">LINEでかんたんご予約</p>
+      <p class="reserve-panel-sub">24時間受付 ｜ 当日予約OK ｜ 完全個室</p>
+
+      <div class="reserve-qr-wrap">
+        <div class="reserve-qr">
+          <a href="#" data-link="line" target="_blank" rel="noopener">
+            <img id="lineQr" alt="CoCosia公式LINE 友だち追加QRコード" width="330" height="330">
+          </a>
+          <p class="qr-caption">スマホのカメラで読み取ってください</p>
+        </div>
+        <div class="reserve-qr-text">
+          <p>
+            公式LINEでは、ご予約のほかに施術のご相談やお得なご案内もお送りしています。<br>
+            スマホでご覧の方は、下のボタンから直接開けます。
+          </p>
+          <div class="reserve-btns">
+            <a href="#" data-link="line" class="btn-line" target="_blank" rel="noopener">LINEで予約・相談する</a>
+            <a href="#" data-link="telbtn" class="btn-tel">電話で予約する</a>
+          </div>
+        </div>
+      </div>
+
+      <p class="reserve-notes">
+        ※ ご予約の変更・キャンセルは前日までにご連絡ください。<br>
+        ※ お待ちいただくスペースがございませんので、予約時間ちょうどにお越しください。<br>
+        ※ ご返信は営業時間内（12:00〜24:00）に順次させていただきます。<br>
+        ※ お急ぎの場合はお電話でも承ります。
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- REVIEWS -->
+<section id="reviews" class="reviews">
+  <div class="reviews-inner">
+    <p class="section-label">Reviews</p>
+    <h2 class="section-title">お客様の声</h2>
+    <div class="section-divider" style="margin:0 auto 2rem;"></div>
+
+    <div class="reviews-score">
+      <div class="score-num">5.0</div>
+      <div class="score-detail">
+        <div class="score-stars">★★★★★</div>
+        <div class="score-count">Googleクチコミ 12件</div>
+      </div>
+    </div>
+
+    <div class="review-grid">
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">主に肩こりや首こりのケアをお願いしていますが、ツボを熟知された的確な施術で非常に効果があります。心身ともにリラックスできる素敵な空間で、美容知識も豊富でメニューのバリエーションが豊富な点も魅力的だと感じました。</p>
+        <p class="review-meta">NSD さん</p>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">全身くまなく、しっかりと温めてほぐしていただけました！手技の技術が高く、強さもしっかりとあり、状況によって調整して下さるので、心地よく過ごせました！物足りないという言葉がこちらのお店では出てこない様な大満足なお手入れでした！</p>
+        <p class="review-meta">とりむねにく さん</p>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">何度も施術をお願いしておりますが、毎回満足度がとても高いです。その時の身体の状態に応じて、様々なアプローチをしていただけて、身体がとても楽になります。今回は新たなストレッチをしていただいたのですが、すごく気持ちよかったです。</p>
+        <p class="review-meta">ようへい さん</p>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">今回初めて行きました。人柄が良くて身体について凄く勉強されていて、整体の技術も素晴らしかったです！帰りは腰痛と足のだるさが改善していて全身が楽になりました！また時間がある時に通ってみようと思います。</p>
+        <p class="review-meta">金藏元成 さん</p>
+      </div>
+    </div>
+
+    <div class="review-cta">
+      <a href="#" data-link="greviews" target="_blank" rel="noopener" class="btn-outline">Googleのクチコミをすべて見る</a>
+      <a href="#" data-link="gwrite" target="_blank" rel="noopener" class="btn-outline">クチコミを書く</a>
+    </div>
+  </div>
+</section>
+
+<!-- INFO -->
+<section id="info" class="info-section">
+  <div class="info-inner">
+    <div>
+      <p class="section-label">Information</p>
+      <h2 class="section-title">サロン情報</h2>
+      <div class="section-divider"></div>
+      <table class="info-table">
+        <tr><td>サロン名</td><td>CoCosia（ここしあ）</td></tr>
+        <tr><td>住所</td><td>東京都足立区千住旭町11-12<br>GROWTH坂本 201</td></tr>
+        <tr><td>アクセス</td><td>JR北千住駅 東口より徒歩3分</td></tr>
+        <tr><td>営業時間</td><td>12:00 〜 24:00</td></tr>
+        <tr><td>定休日</td><td>不定休</td></tr>
+        <tr><td>電話番号</td><td><a href="tel:08055239301" style="color:var(--clay);text-decoration:none;">080-5523-9301</a></td></tr>
+        <tr><td>ご予約</td><td>LINEにて24時間受付<br>当日予約OK</td></tr>
+        <tr><td>支払い方法</td><td>現金 / Visa / Mastercard / JCB /<br>American Express / PayPay 他</td></tr>
+        <tr><td>駐車場</td><td>近隣のコインパーキングをご利用ください</td></tr>
+      </table>
+    </div>
+    <div>
+      <p class="section-label" style="margin-top:2rem;">Access</p>
+      <h3 class="section-title" style="font-size:1.3rem;">アクセス方法</h3>
+      <div class="access-box">
+        <h4>🚉 北千住駅東口から</h4>
+        <p>
+          北千住駅東口を出て正面の学園通り商店街を進みます。右手のマクドナルドと左手のファミリーマートを過ぎ、美容室 Ai 様の横の細い道に入り、左手奥に茶色の外階段のある建物（アパート）が見えます。そのアパートの2階が当店です。<br><br>
+          ※ お待ち頂くスペースはございませんので、予約時間ちょうどにお越しください。<br>
+          ※ 途中でわからなくなった際はお気軽にお電話ください。
+        </p>
+      </div>
+      <div class="map-embed">
+        <iframe
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3238.0818440760736!2d139.80545397635717!3d35.74879307256563!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188fd19e9d3c6f%3A0xa417b36a059a9362!2zQ29Db3NpYSDjg6rjg6njgq_jgrzjg7zjgrfjg6fjg7PjgrXjg63jg7M!5e0!3m2!1sja!2sjp!4v1786278511658!5m2!1sja!2sjp"
+          title="CoCosia リラクゼーションサロン 地図"
+          style="border:0;" allowfullscreen loading="lazy"
+          referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+  <p class="cta-label">Reservation</p>
+  <h2 class="cta-title">今日の疲れを、今夜ほぐしに来ませんか</h2>
+  <p class="cta-sub">当日予約OK ｜ 24時まで営業 ｜ 完全個室</p>
+  <div class="cta-btns">
+    <a href="#" data-link="line" target="_blank" rel="noopener" class="btn-white">LINEでご予約はこちら</a>
+    <a href="#reserve" class="btn-ghost">QRコードを表示</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p class="footer-logo">Co<span>Co</span>sia</p>
+  <p class="footer-sub">RELAXATION SALON / KITASENJU</p>
+  <ul class="footer-links">
+    <li><a href="#about">サロンについて</a></li>
+    <li><a href="#menu">メニュー</a></li>
+    <li><a href="#features">こだわり</a></li>
+    <li><a href="#reviews">口コミ</a></li>
+    <li><a href="blog.html">ブログ</a></li>
+    <li><a href="#info">アクセス</a></li>
+    <li><a href="#reserve">ご予約</a></li>
+  </ul>
+  <div class="footer-sns">
+    <a href="https://x.com/gmjfx3mpi3yfflg" target="_blank" rel="noopener" aria-label="X (旧Twitter)">
+      <svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7.4 8.5L23 22h-6.8l-5.3-7-6.1 7H1.7l7.9-9.1L1 2h7l4.8 6.4L18.9 2Zm-1.2 18h1.9L7.4 3.9H5.4L17.7 20Z"/></svg>
+    </a>
+    <a href="https://www.instagram.com/cocosia.kitasenju" target="_blank" rel="noopener" aria-label="Instagram">
+      <svg viewBox="0 0 24 24"><path d="M12 2.2c3.2 0 3.6 0 4.9.1 1.2.1 1.8.2 2.2.4.6.2 1 .5 1.4.9.4.4.7.8.9 1.4.2.4.4 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c-.1 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .4-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2-.1-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1-.4-2.2-.1-1.3-.1-1.7-.1-4.9s0-3.6.1-4.9c.1-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.4 2.2-.4C8.4 2.2 8.8 2.2 12 2.2Zm0 1.8c-3.1 0-3.5 0-4.7.1-1.1.1-1.7.2-2.1.3-.5.2-.9.4-1.2.8-.4.3-.6.7-.8 1.2-.1.4-.3 1-.3 2.1-.1 1.2-.1 1.6-.1 4.7s0 3.5.1 4.7c.1 1.1.2 1.7.3 2.1.2.5.4.9.8 1.2.3.4.7.6 1.2.8.4.1 1 .3 2.1.3 1.2.1 1.6.1 4.7.1s3.5 0 4.7-.1c1.1-.1 1.7-.2 2.1-.3.5-.2.9-.4 1.2-.8.4-.3.6-.7.8-1.2.1-.4.3-1 .3-2.1.1-1.2.1-1.6.1-4.7s0-3.5-.1-4.7c-.1-1.1-.2-1.7-.3-2.1-.2-.5-.4-.9-.8-1.2-.3-.4-.7-.6-1.2-.8-.4-.1-1-.3-2.1-.3-1.2-.1-1.6-.1-4.7-.1Zm0 3.1a4.9 4.9 0 1 1 0 9.8 4.9 4.9 0 0 1 0-9.8Zm0 8.1a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Zm6.2-8.3a1.15 1.15 0 1 1-2.3 0 1.15 1.15 0 0 1 2.3 0Z"/></svg>
+    </a>
+  </div>
+  <a class="footer-tel" href="tel:08055239301">TEL 080-5523-9301</a>
+  <p class="footer-copy">© 2026 CoCosia Relaxation Salon. All rights reserved.</p>
+</footer>
+
+<!-- スマホ用 固定予約バー -->
+<div class="mobile-bar">
+  <a href="#reserve" class="mb-reserve">予約する</a>
+  <a href="#" data-link="line" target="_blank" rel="noopener" class="mb-line">LINE</a>
+</div>
+
+<script>
+  // SITE_CONFIG の値を、ページ内のすべてのボタンに自動で反映します
+  (function () {
+    var c = SITE_CONFIG;
+    document.querySelectorAll('[data-link="line"]').forEach(function (a) { a.href = c.LINE_URL; });
+    document.querySelectorAll('[data-link="greviews"]').forEach(function (a) { a.href = c.GOOGLE_REVIEWS; });
+    document.querySelectorAll('[data-link="gwrite"]').forEach(function (a) { a.href = c.GOOGLE_WRITE; });
+    var qr = document.getElementById('lineQr');
+    if (qr) qr.src = QR_SRC;
+    document.querySelectorAll('[data-link="telbtn"]').forEach(function (a) {
+      if (c.TEL) { a.href = 'tel:' + c.TEL.replace(/-/g, ''); a.textContent = '電話で予約（' + c.TEL + '）'; }
+      else { a.style.display = 'none'; }
+    });
+    document.querySelectorAll('[data-link="tel"]').forEach(function (a) {
+      if (c.TEL) { a.href = 'tel:' + c.TEL.replace(/-/g, ''); a.textContent = c.TEL; }
+      else { var li = a.closest('li') || a.parentElement; if (li) li.style.display = 'none'; }
+    });
+  })();
+</script>
+</body>
+</html>
