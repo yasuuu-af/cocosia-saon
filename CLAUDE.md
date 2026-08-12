@@ -60,6 +60,7 @@
 
 ## 4. デプロイ
 
+- 公開ベースURL: `https://cocosia.relaxation-salon.workers.dev/`（canonical / OGP / 構造化データで使用）
 - ホスティング: **Cloudflare Workers**
 - 公開URL: https://cocosia.relaxation-salon.workers.dev/
 - 開発ブランチ: `claude/salon-integration-setup-8azhxf`
@@ -131,7 +132,9 @@ TOL は以下のヘッダーで外部サイトへの埋め込みを拒否して�
 - [ ] 店舗情報（住所・電話・営業時間・料金）が全ファイルで一致しているか
 - [ ] 予約ボタン（TOL）が全セクション・全ページから到達可能か（導線の切断がないか）
 - [ ] 予約導線に `<iframe>` を使っていないか（TOL は埋め込み不可）
-- [ ] `<title>` / `meta description` / OGP がページ内容と整合しているか
+- [ ] `<title>` / `meta description` / OGP / canonical がページ内容と整合しているか
+- [ ] JSON-LD が有効なJSONで、店舗情報（住所・電話・営業時間・料金）と一致しているか
+- [ ] 新規ページ追加時に OGP・canonical・JSON-LD・モバイル固定バーを入れ忘れていないか
 - [ ] スマホ幅（375px）でレイアウトが崩れていないか
 - [ ] `最新版HP/` を誤って編集していないか
 - [ ] 指示範囲外の変更が混入していないか
@@ -143,3 +146,5 @@ TOL は以下のヘッダーで外部サイトへの埋め込みを拒否して�
 - フォントは Cormorant Garamond（欧文見出し）/ Noto Serif JP（和文見出し）/ Noto Sans JP（本文）。
 - 外部ライブラリを追加しない。
 - 大規模な書き換えより、セクション単位の最小限の修正を優先する。
+- OGP の `og:image` は未設定（リポジトリに画像ファイルが無いため）。画像を用意する場合は 1200×630px を配置し、全ページの `og:image` に絶対URLで指定する。
+- 構造化データに `aggregateRating` は入れない（自社サイトでの自己申告レビューは Google のポリシー違反となるため）。クチコミ評価は Google ビジネスプロフィール側に集約する。
