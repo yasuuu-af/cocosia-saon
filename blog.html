@@ -389,6 +389,7 @@
      ============================================================ -->
 <script>
   const SITE_CONFIG = {
+    RESERVE_URL: "https://tol-app.jp/s/vci08tspdhggsu8a0ooe",
     LINE_URL: "https://page.line.me/756assva?openQrModal=true"
   };
 </script>
@@ -496,7 +497,7 @@
   <h2 class="cta-title">読んでくださって、ありがとうございます</h2>
   <p class="cta-sub">当日予約OK ｜ 24時まで営業 ｜ 完全個室</p>
   <div class="cta-btns">
-    <a href="#" data-link="line" target="_blank" rel="noopener" class="btn-white">LINEでご予約はこちら</a>
+    <a href="#" data-link="reserve" target="_blank" rel="noopener" class="btn-white">24時間ネット予約はこちら</a>
     <a href="index.html#reserve" class="btn-ghost">QRコードを表示</a>
   </div>
 </section>
@@ -526,13 +527,14 @@
 </footer>
 
 <div class="mobile-bar">
-  <a href="index.html#reserve" class="mb-reserve">予約する</a>
-  <a href="#" data-link="line" target="_blank" rel="noopener" class="mb-line">LINE</a>
+  <a href="#" data-link="reserve" target="_blank" rel="noopener" class="mb-reserve">ネット予約</a>
+  <a href="#" data-link="line" target="_blank" rel="noopener" class="mb-line">LINE相談</a>
 </div>
 
 <script>
   (function () {
     var c = SITE_CONFIG;
+    document.querySelectorAll('[data-link="reserve"]').forEach(function (a) { a.href = c.RESERVE_URL; });
     document.querySelectorAll('[data-link="line"]').forEach(function (a) { a.href = c.LINE_URL; });
 
     // カテゴリ絞り込み

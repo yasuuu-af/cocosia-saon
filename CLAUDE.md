@@ -71,6 +71,7 @@
 
 ```js
 const SITE_CONFIG = {
+  RESERVE_URL:    "https://tol-app.jp/s/vci08tspdhggsu8a0ooe",
   LINE_URL:       "https://page.line.me/756assva?openQrModal=true",
   GOOGLE_REVIEWS: "https://www.google.com/maps?cid=11824116614626448226",
   GOOGLE_WRITE:   "https://search.google.com/local/writereview?placeid=&cid=11824116614626448226",
@@ -82,7 +83,8 @@ const SITE_CONFIG = {
 
 | チャネル | URL / 値 | 役割 |
 | --- | --- | --- |
-| LINE公式アカウント | https://page.line.me/756assva?openQrModal=true | **予約の主導線**（24時間受付） |
+| 予約システム（TOL） | https://tol-app.jp/s/vci08tspdhggsu8a0ooe | **予約の主導線**（24時間・その場で確定） |
+| LINE公式アカウント | https://page.line.me/756assva?openQrModal=true | お問い合わせ・ご相談窓口（予約も受付） |
 | 電話 | 080-5523-9301 | 当日・急ぎの予約 |
 | Instagram | https://www.instagram.com/cocosia.kitasenju | 認知・世界観訴求 |
 | X (Twitter) | https://x.com/gmjfx3mpi3yfflg | 認知・空き枠告知 |
@@ -90,8 +92,20 @@ const SITE_CONFIG = {
 
 ### 予約システムの現状
 
-現時点で**外部予約システムは未導入**。予約は LINE と電話のみ。
-予約システムを導入する際は、LINE を主導線として維持したまま追加すること（LINE 導線を弱めない）。
+予約システムは **TOL（https://tol-app.jp/s/vci08tspdhggsu8a0ooe）** を導入済み。**予約の主導線は TOL フォーム**とする。
+
+- LINE は「お問い合わせ・ご相談」窓口として維持し、副次的に予約も受け付ける。
+- 電話は当日・急ぎの予約用。
+
+### ⚠ TOL は iframe 埋め込み不可
+
+TOL は以下のヘッダーで外部サイトへの埋め込みを拒否している。
+
+- `X-Frame-Options: SAMEORIGIN`
+- `Content-Security-Policy: frame-ancestors 'self'`
+
+そのため **`<iframe>` で HP 内に埋め込むことはできない**（空白または接続拒否の表示になる）。
+予約導線は必ず `<a href target="_blank" rel="noopener">` のリンクボタンで実装すること。
 
 ## 6. 店舗情報（サイト内の表記の正）
 
@@ -105,7 +119,7 @@ const SITE_CONFIG = {
 | 定休日 | 不定休 |
 | 電話 | 080-5523-9301 |
 | 決済 | 現金 / Visa / Mastercard / JCB / American Express / PayPay |
-| キャンセル | 24時間前までの連絡が必要 |
+| キャンセル | 前日までの連絡が必要 |
 
 これらは複数箇所（本文・構造化データ・meta description 等）に登場する。**変更時は全ファイル横断で grep し、漏れなく直すこと。**
 
@@ -115,7 +129,8 @@ const SITE_CONFIG = {
 - [ ] 記事ページ（`blog-*.html`）のナビゲーション・パンくず・関連記事リンクが切れていないか
 - [ ] `SITE_CONFIG` の各URLが実際に到達可能か
 - [ ] 店舗情報（住所・電話・営業時間・料金）が全ファイルで一致しているか
-- [ ] LINE 予約ボタンが全セクションから到達可能か（導線の切断がないか）
+- [ ] 予約ボタン（TOL）が全セクション・全ページから到達可能か（導線の切断がないか）
+- [ ] 予約導線に `<iframe>` を使っていないか（TOL は埋め込み不可）
 - [ ] `<title>` / `meta description` / OGP がページ内容と整合しているか
 - [ ] スマホ幅（375px）でレイアウトが崩れていないか
 - [ ] `最新版HP/` を誤って編集していないか

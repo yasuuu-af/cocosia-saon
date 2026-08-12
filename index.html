@@ -963,6 +963,7 @@
 
 <!-- ============================================================
      ▼▼▼ 設定はここだけ変えればOK ▼▼▼
+     RESERVE_URL    … 予約システム（TOL）のURL
      LINE_URL       … LINE公式アカウントのURL
      GOOGLE_REVIEWS … Googleクチコミ一覧のURL
      GOOGLE_WRITE   … クチコミ投稿ページのURL
@@ -970,6 +971,7 @@
      ============================================================ -->
 <script>
   const SITE_CONFIG = {
+    RESERVE_URL: "https://tol-app.jp/s/vci08tspdhggsu8a0ooe",
     LINE_URL:   "https://page.line.me/756assva?openQrModal=true",
     GOOGLE_REVIEWS: "https://www.google.com/maps?cid=11824116614626448226",
     GOOGLE_WRITE:   "https://search.google.com/local/writereview?placeid=&cid=11824116614626448226",
@@ -1011,7 +1013,7 @@
       毎日頑張るあなたへ、ご褒美の時間を
     </p>
     <div class="hero-btns">
-      <a href="#reserve" class="btn-primary">LINEでご予約</a>
+      <a href="#" data-link="reserve" target="_blank" rel="noopener" class="btn-primary">24時間ネット予約</a>
       <a href="#menu" class="btn-outline">メニューを見る</a>
     </div>
   </div>
@@ -1077,35 +1079,35 @@
         <h3>【アロマ】全身癒し♪<br>お悩み別オーダーメイド</h3>
         <p>ボディトリートメント＋ボディケア＋ヘッド。お悩みに合わせてカスタマイズ。</p>
         <div class="menu-price">¥9,900<span>（90分）</span></div>
-        <div class="menu-card-cta"><a href="#reserve">このメニューをLINEで予約 →</a></div>
+        <div class="menu-card-cta"><a href="#" data-link="reserve" target="_blank" rel="noopener">このメニューを予約する →</a></div>
       </div>
       <div class="menu-card">
         <span class="menu-badge">全員対象</span>
         <h3>【アロマ】全身癒し♪<br>お悩み別オーダーメイド</h3>
         <p>ボディトリートメント＋ボディケア＋ヘッド。じっくりたっぷりコース。</p>
         <div class="menu-price">¥12,500<span>（120分）</span></div>
-        <div class="menu-card-cta"><a href="#reserve">このメニューをLINEで予約 →</a></div>
+        <div class="menu-card-cta"><a href="#" data-link="reserve" target="_blank" rel="noopener">このメニューを予約する →</a></div>
       </div>
       <div class="menu-card">
         <span class="menu-badge">全員対象</span>
         <h3>全身すっきり！<br>あかすり＋全身保湿ケア</h3>
         <p>12時〜20時限定。背中や皮膚のザラつきをしっかりケア。保湿まで丁寧に。</p>
         <div class="menu-price">¥12,900<span>（120分）</span></div>
-        <div class="menu-card-cta"><a href="#reserve">このメニューをLINEで予約 →</a></div>
+        <div class="menu-card-cta"><a href="#" data-link="reserve" target="_blank" rel="noopener">このメニューを予約する →</a></div>
       </div>
       <div class="menu-card">
         <span class="menu-badge">全員対象</span>
         <h3>【毛穴洗浄×美白】<br>エクソソーム導入</h3>
         <p>鼻の黒ずみ解消。ヒト幹細胞エクソソーム美容液で毛穴ケアと美白を同時に。</p>
         <div class="menu-price">¥9,800<span>（60分）</span></div>
-        <div class="menu-card-cta"><a href="#reserve">このメニューをLINEで予約 →</a></div>
+        <div class="menu-card-cta"><a href="#" data-link="reserve" target="_blank" rel="noopener">このメニューを予約する →</a></div>
       </div>
       <div class="menu-card">
         <span class="menu-badge">全員対象</span>
         <h3>【本格育毛促進】<br>髪の密度UP・毛根活性</h3>
         <p>エクソソーム配合美容液＋熟練のハンド技術で頭皮環境を整え美髪へ。</p>
         <div class="menu-price">¥9,800<span>（60分）</span></div>
-        <div class="menu-card-cta"><a href="#reserve">このメニューをLINEで予約 →</a></div>
+        <div class="menu-card-cta"><a href="#" data-link="reserve" target="_blank" rel="noopener">このメニューを予約する →</a></div>
       </div>
       <div class="menu-card">
         <span class="menu-badge">全員対象</span>
@@ -1113,21 +1115,21 @@
         <p>全身のボディラインと美顔を同時にアプローチ。</p>
         <div class="menu-price">¥15,800<span>（120分）</span></div>
         <p class="menu-note">通常 ¥20,000</p>
-        <div class="menu-card-cta"><a href="#reserve">このメニューをLINEで予約 →</a></div>
+        <div class="menu-card-cta"><a href="#" data-link="reserve" target="_blank" rel="noopener">このメニューを予約する →</a></div>
       </div>
       <div class="menu-card">
         <span class="menu-badge">スタンダード</span>
         <h3>【ストレッチ＋もみほぐし】<br>全身すっきりコース</h3>
         <p>リンパの流れを意識した独自の手技と丁寧なストレッチで、むくみ・疲れ・こわばりをまとめてケア。体が硬い方や、マッサージが初めての方にも安心してお受けいただけます。</p>
         <div class="menu-price">¥9,000<span>（90分）</span></div>
-        <div class="menu-card-cta"><a href="#reserve">このメニューをLINEで予約 →</a></div>
+        <div class="menu-card-cta"><a href="#" data-link="reserve" target="_blank" rel="noopener">このメニューを予約する →</a></div>
       </div>
       <div class="menu-card">
         <span class="menu-badge">全員対象</span>
         <h3>【本格火罐カッピング】<br>＋選べるオプション</h3>
         <p>火を使って陰圧をつくる本格火罐（ひかん）で、深部の血流とリンパの滞りを一気に解放。その後は揉みほぐし・オイルトリートメント・毛穴フェイシャルの中からお好みで組み合わせ可能。肩こり・腰痛・疲労回復に。</p>
         <div class="menu-price">¥7,900<span>（60分）</span></div>
-        <div class="menu-card-cta"><a href="#reserve">このメニューをLINEで予約 →</a></div>
+        <div class="menu-card-cta"><a href="#" data-link="reserve" target="_blank" rel="noopener">このメニューを予約する →</a></div>
       </div>
     </div>
     <p style="margin-top:2rem; font-size:0.75rem; color:var(--text-light); text-align:center; letter-spacing:0.1em;">
@@ -1184,31 +1186,35 @@
     <h2 class="section-title">ご予約について</h2>
     <div class="section-divider"></div>
     <p class="reserve-lead">
-      ご予約はLINEから24時間受付中。<br>
-      トークで日時をお送りいただくだけで、折り返しご案内いたします。
+      ネット予約なら24時間いつでも、その場で予約が確定します。<br>
+      LINEやお電話でのご予約・ご相談も承っております。
     </p>
 
     <div class="reserve-steps">
       <div class="reserve-step">
         <div class="reserve-step-num">01</div>
-        <h4>LINEで友だち追加</h4>
-        <p>下のボタン、またはQRコードから友だち追加してください</p>
+        <h4>メニューを選ぶ</h4>
+        <p>下のボタンから予約ページを開き、ご希望のメニューをお選びください</p>
       </div>
       <div class="reserve-step">
         <div class="reserve-step-num">02</div>
-        <h4>ご希望をトークで送信</h4>
-        <p>ご希望のメニューと日時の候補をお送りください</p>
+        <h4>日時を選ぶ</h4>
+        <p>カレンダーで空き状況を見ながら、ご都合のよい日時をお選びください</p>
       </div>
       <div class="reserve-step">
         <div class="reserve-step-num">03</div>
-        <h4>予約確定</h4>
-        <p>空き状況を確認のうえ、こちらから確定のご連絡をいたします</p>
+        <h4>その場で予約完了</h4>
+        <p>お客様情報をご入力いただくと、その場でご予約が確定します</p>
       </div>
     </div>
 
     <div class="reserve-panel">
-      <p class="reserve-panel-title">LINEでかんたんご予約</p>
+      <p class="reserve-panel-title">ネットで24時間かんたん予約</p>
       <p class="reserve-panel-sub">24時間受付 ｜ 当日予約OK ｜ 完全個室</p>
+
+      <div class="reserve-btns">
+        <a href="#" data-link="reserve" class="btn-reserve-main" target="_blank" rel="noopener">ネット予約はこちら</a>
+      </div>
 
       <div class="reserve-qr-wrap">
         <div class="reserve-qr">
@@ -1219,18 +1225,18 @@
         </div>
         <div class="reserve-qr-text">
           <p>
-            公式LINEでは、ご予約のほかに施術のご相談やお得なご案内もお送りしています。<br>
-            スマホでご覧の方は、下のボタンから直接開けます。
+            メニュー選びに迷う、体の悩みを先に相談したい——そんなときは公式LINEへ。<br>
+            LINEやお電話からのご予約も承っております。
           </p>
           <div class="reserve-btns">
-            <a href="#" data-link="line" class="btn-line" target="_blank" rel="noopener">LINEで予約・相談する</a>
+            <a href="#" data-link="line" class="btn-line" target="_blank" rel="noopener">LINEで相談・予約する</a>
             <a href="#" data-link="telbtn" class="btn-tel">電話で予約する</a>
           </div>
         </div>
       </div>
 
       <p class="reserve-notes">
-        ※ ご予約の変更・キャンセルは前日までにご連絡ください。<br>
+        ※ ご予約の変更・キャンセルは前日までにご連絡ください（ネット予約分は予約ページからも変更できます）。<br>
         ※ お待ちいただくスペースがございませんので、予約時間ちょうどにお越しください。<br>
         ※ ご返信は営業時間内（12:00〜24:00）に順次させていただきます。<br>
         ※ お急ぎの場合はお電話でも承ります。
@@ -1363,14 +1369,15 @@
 
 <!-- スマホ用 固定予約バー -->
 <div class="mobile-bar">
-  <a href="#reserve" class="mb-reserve">予約する</a>
-  <a href="#" data-link="line" target="_blank" rel="noopener" class="mb-line">LINE</a>
+  <a href="#" data-link="reserve" target="_blank" rel="noopener" class="mb-reserve">ネット予約</a>
+  <a href="#" data-link="line" target="_blank" rel="noopener" class="mb-line">LINE相談</a>
 </div>
 
 <script>
   // SITE_CONFIG の値を、ページ内のすべてのボタンに自動で反映します
   (function () {
     var c = SITE_CONFIG;
+    document.querySelectorAll('[data-link="reserve"]').forEach(function (a) { a.href = c.RESERVE_URL; });
     document.querySelectorAll('[data-link="line"]').forEach(function (a) { a.href = c.LINE_URL; });
     document.querySelectorAll('[data-link="greviews"]').forEach(function (a) { a.href = c.GOOGLE_REVIEWS; });
     document.querySelectorAll('[data-link="gwrite"]').forEach(function (a) { a.href = c.GOOGLE_WRITE; });
