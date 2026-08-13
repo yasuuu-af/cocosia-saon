@@ -18,7 +18,7 @@ window.Ledger = (function(){
     BUSINESS_END:   24 * 60,   // 営業終了 24:00（分単位）
     STEP: 30,                  // 予約枠の刻み（分）
     CUTOFF_MIN: 2 * 60,        // 受付締切：現在時刻の2時間後以降のみ予約可
-    MAX_ADVANCE_MONTHS: 2,     // 予約可能範囲：本日から2ヶ月先まで
+    MAX_ADVANCE_DAYS: 60,      // 予約可能範囲：本日から60日先まで（≒2ヶ月。管理画面「設定」から日数で変更可能）
 
     LINE_URL: "https://page.line.me/756assva?openQrModal=true",
     TEL: "080-5523-9301",
@@ -170,7 +170,7 @@ window.Ledger = (function(){
       BUSINESS_END:   (typeof saved.businessEnd === "number") ? saved.businessEnd : BOOKING_CONFIG.BUSINESS_END,
       STEP: BOOKING_CONFIG.STEP,
       CUTOFF_MIN: (typeof saved.cutoffMin === "number") ? saved.cutoffMin : BOOKING_CONFIG.CUTOFF_MIN,
-      MAX_ADVANCE_MONTHS: (typeof saved.maxAdvanceMonths === "number") ? saved.maxAdvanceMonths : BOOKING_CONFIG.MAX_ADVANCE_MONTHS,
+      MAX_ADVANCE_DAYS: (typeof saved.maxAdvanceDays === "number") ? saved.maxAdvanceDays : BOOKING_CONFIG.MAX_ADVANCE_DAYS,
       NOTIFICATION_EMAILS: Array.isArray(saved.notificationEmails) ? saved.notificationEmails : BOOKING_CONFIG.NOTIFICATION_EMAILS
     };
   }
@@ -312,12 +312,12 @@ window.Ledger = (function(){
     });
     return win;
   }
-  /* 予約可能な日付範囲（本日〜maxAdvanceMonths ヶ月後）のISO文字列を返す
+  /* 予約可能な日付範囲（本日〜maxAdvanceDays 日後）のISO文字列を返す
      cfg を省略した場合は BOOKING_CONFIG の初期値を使う（フェーズ①の簡易呼び出し用）。 */
   function bookableRange(now, cfg){
     cfg = cfg || BOOKING_CONFIG;
     var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    var maxDate = addMonths(today, cfg.MAX_ADVANCE_MONTHS);
+    var maxDate = addDays(today, cfg.MAX_ADVANCE_DAYS);
     return { fromISO: dateISO(today), toISO: dateISO(maxDate) };
   }
   function isBookableDate(dISO, now, cfg){
@@ -333,7 +333,7 @@ window.Ledger = (function(){
        reservations: [{dateISO,startMin,endMin}, ...]  (その日のみで良い),
        blockedSlots: [{dateISO,allDay,startMin,endMin,source}, ...] (その日のみで良い),
        startWindow: {min,max} | null,
-       cfg: { BUSINESS_START, BUSINESS_END, STEP, CUTOFF_MIN, MAX_ADVANCE_MONTHS } (省略時はBOOKING_CONFIG)
+       cfg: { BUSINESS_START, BUSINESS_END, STEP, CUTOFF_MIN, MAX_ADVANCE_DAYS } (省略時はBOOKING_CONFIG)
      }
   */
   function computeAvailableStartTimes(opts){
@@ -536,7 +536,7 @@ window.Ledger = (function(){
     },
 
     /* 設定の更新。渡したキーのみ上書きする（部分更新）。
-       payload: { notificationEmails, businessStart, businessEnd, cutoffMin, maxAdvanceMonths } */
+       payload: { notificationEmails, businessStart, businessEnd, cutoffMin, maxAdvanceDays } */
     updateSettings: function(payload){
       return Promise.resolve().then(function(){
         var current = loadSettings();

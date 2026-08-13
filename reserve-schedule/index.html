@@ -3,854 +3,1258 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>予約受付台帳</title>
+<title>ご予約 | CoCosia（ここしあ）</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Noto+Serif+JP:wght@200;300;400&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
 <style>
   :root{
-    --paper: #F1ECDF;
-    --paper-deep: #E8E1CC;
-    --paper-shadow: #DCD3B8;
-    --ink: #262420;
-    --ink-soft: #6B6455;
-    --ink-faint: #A69C87;
-    --rule: #CBC0A2;
-    --rule-strong: #B7A97F;
-    --teal: #1F6F63;
-    --teal-deep: #164F46;
-    --teal-tint: #DDEAE5;
-    --stamp: #B3382A;
-    --stamp-deep: #8C2A20;
-    --stamp-tint: #F3DDD7;
-    --busy-a: #DDDDD8;
-    --busy-b: #CCCCC5;
-    --busy-text: #6B6B64;
-    --available-bg: #DDEAE5;
-    --available-bg-hover: #C7DFD6;
-    --focus: #1F6F63;
-    --font-display: "Hiragino Mincho ProN","游明朝","Yu Mincho",serif;
-    --font-body: "Hiragino Kaku Gothic ProN","游ゴシック体","Yu Gothic","Hiragino Sans",sans-serif;
-    --font-mono: "SF Mono","Consolas","Menlo",monospace;
+    --cream: #f8f3ec;
+    --warm-white: #faf7f2;
+    --sand: #e8dcc8;
+    --taupe: #c8b49a;
+    --clay: #a07858;
+    --earth: #7a5c40;
+    --bark: #4a3020;
+    --sage: #8a9e7a;
+    --sage-light: #c2d0b4;
+    --line-green: #06c755;
+    --text-dark: #2e1f10;
+    --text-mid: #6a4e35;
+    --text-light: #9a7e65;
+    --danger: #a83a3a;
+    --danger-tint: #f6e4e0;
   }
-
-  *{ box-sizing:border-box; }
-
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
   body{
-    margin:0;
-    background:
-      linear-gradient(180deg, rgba(0,0,0,0.03), rgba(0,0,0,0) 120px),
-      var(--paper-shadow);
-    color:var(--ink);
-    font-family:var(--font-body);
-    line-height:1.6;
-    padding:32px 20px 64px;
+    font-family:'Noto Sans JP', sans-serif;
+    background:var(--warm-white);
+    color:var(--text-dark);
+    line-height:1.7;
+    padding-bottom:96px;
   }
-
-  a{ color:var(--teal-deep); }
-
-  :focus-visible{
-    outline:2px solid var(--focus);
-    outline-offset:2px;
-  }
-
-  .ledger{
-    max-width:1180px;
-    margin:0 auto;
-    background:var(--paper);
-    border:1px solid var(--rule);
-    box-shadow: 0 1px 0 rgba(255,255,255,0.5) inset, 0 18px 40px -20px rgba(38,36,32,0.45);
-    border-radius:2px;
-  }
+  a{ color:inherit; }
+  h1,h2,h3{ font-weight:400; }
+  button{ font-family:inherit; }
+  .wrap{ max-width:480px; margin:0 auto; padding:0 18px; }
 
   /* ---------- Header ---------- */
-  .ledger-header{
-    padding:30px 36px 22px;
-    border-bottom:1px solid var(--rule);
-    display:flex;
-    align-items:baseline;
-    justify-content:space-between;
-    gap:16px;
-    flex-wrap:wrap;
+  .top-header{
+    background:var(--cream);
+    border-bottom:1px solid var(--sand);
+    padding:14px 0 0;
+    position:sticky; top:0; z-index:30;
   }
-  .ledger-header .title-block{ display:flex; align-items:baseline; gap:14px; }
-  .ledger-header h1{
-    font-family:var(--font-display);
-    font-weight:700;
-    font-size:26px;
-    letter-spacing:.06em;
-    margin:0;
+  .top-header .row{
+    display:flex; align-items:center; justify-content:space-between;
+    max-width:480px; margin:0 auto; padding:0 18px 10px;
   }
-  .ledger-header .subtitle{
-    font-size:12px;
-    color:var(--ink-soft);
-    letter-spacing:.12em;
+  .top-logo{
+    font-family:'Cormorant Garamond', serif;
+    font-size:1.4rem;
+    letter-spacing:0.06em;
+    color:var(--earth);
+    text-decoration:none;
   }
-  .ledger-header .header-right{ display:flex; align-items:center; gap:14px; }
-  .ledger-header .today-note{
-    font-family:var(--font-mono);
-    font-size:12px;
-    color:var(--ink-faint);
-  }
-  .admin-link{
-    font-family:var(--font-body);
-    font-size:11.5px;
-    letter-spacing:.03em;
-    color:var(--ink-soft);
-    border:1px solid var(--rule-strong);
+  .top-logo span{ color:var(--clay); }
+  .lookup-link{
+    font-size:0.72rem;
+    color:var(--text-mid);
+    border:1px solid var(--taupe);
     border-radius:20px;
-    padding:5px 12px;
+    padding:5px 11px;
     text-decoration:none;
     white-space:nowrap;
+    background:var(--warm-white);
   }
-  .admin-link:hover{ background:var(--paper-deep); color:var(--ink); }
+  .lookup-link:hover{ background:var(--sand); }
 
-  .storage-warning{
-    display:none;
-    margin:0 36px;
-    margin-top:18px;
-    padding:10px 14px;
-    border:1px solid var(--stamp);
-    background:var(--stamp-tint);
-    color:var(--stamp-deep);
-    font-size:12px;
-    border-radius:3px;
-  }
-  .storage-warning.show{ display:block; }
-
-  /* ---------- Sections ---------- */
-  section{ padding:22px 36px; border-bottom:1px solid var(--rule); }
-  section:last-of-type{ border-bottom:none; }
-
-  h2.section-title{
-    font-family:var(--font-display);
-    font-size:15px;
-    font-weight:700;
-    letter-spacing:.08em;
-    margin:0 0 4px;
+  /* ---------- Step indicator ---------- */
+  .step-indicator{
     display:flex;
-    align-items:center;
-    gap:8px;
+    max-width:480px; margin:0 auto;
+    padding:0 10px 12px;
   }
-  h2.section-title .num{
-    font-family:var(--font-mono);
-    font-size:11px;
-    color:var(--ink-faint);
-    border:1px solid var(--rule-strong);
-    border-radius:2px;
-    padding:1px 5px;
+  .step-indicator .step-item{
+    flex:1;
+    text-align:center;
+    position:relative;
+    font-size:0.62rem;
+    color:var(--text-light);
   }
-  .section-desc{
-    font-size:12.5px;
-    color:var(--ink-soft);
-    margin:0 0 16px;
+  .step-indicator .step-item::before{
+    content:'';
+    position:absolute;
+    top:11px; left:-50%; width:100%; height:2px;
+    background:var(--sand);
+    z-index:0;
   }
-
-  /* ---------- Toolbar ---------- */
-  .toolbar{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    flex-wrap:wrap;
-    gap:12px;
-    padding-bottom:0;
-  }
-  .week-nav{ display:flex; align-items:center; gap:10px; }
-  .week-nav button{
-    width:30px; height:30px;
-    border:1px solid var(--rule-strong);
-    background:var(--paper);
-    border-radius:3px;
-    cursor:pointer;
-    font-size:14px;
-    color:var(--ink);
+  .step-indicator .step-item:first-child::before{ display:none; }
+  .step-indicator .num{
+    width:24px; height:24px;
+    border-radius:50%;
+    background:var(--warm-white);
+    border:2px solid var(--taupe);
+    color:var(--text-mid);
     display:flex; align-items:center; justify-content:center;
+    margin:0 auto 4px;
+    font-family:'Cormorant Garamond', serif;
+    font-size:0.85rem;
+    position:relative; z-index:1;
   }
-  .week-nav button:hover{ background:var(--paper-deep); }
-  .week-nav .range{
-    font-family:var(--font-mono);
-    font-size:13.5px;
-    min-width:170px;
-    text-align:center;
-  }
-  .week-nav .today-btn{
-    width:auto; padding:0 10px; font-size:12px; font-family:var(--font-body);
-  }
-  .legend{ display:flex; gap:14px; font-size:11.5px; color:var(--ink-soft); flex-wrap:wrap; }
-  .legend .swatch{ display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:5px; vertical-align:-1px; }
-  .sw-available{ background:var(--teal-tint); border:1px solid var(--teal); }
-  .sw-busy{ background:repeating-linear-gradient(45deg, var(--busy-a), var(--busy-a) 3px, var(--busy-b) 3px, var(--busy-b) 6px); border:1px solid var(--rule-strong); }
-  .sw-reserved{ background:var(--stamp-tint); border:1px solid var(--stamp); }
+  .step-indicator .step-item.done .num{ background:var(--sage); border-color:var(--sage); color:#fff; }
+  .step-indicator .step-item.done::before{ background:var(--sage); }
+  .step-indicator .step-item.current .num{ background:var(--clay); border-color:var(--clay); color:#fff; }
+  .step-indicator .step-item.current{ color:var(--earth); font-weight:600; }
 
-  /* ---------- Board (two-page layout) ---------- */
-  .board{
+  /* ---------- Step sections ---------- */
+  .step-panel{ display:none; padding:20px 0 30px; }
+  .step-panel.active{ display:block; }
+  .step-title{
+    font-family:'Noto Serif JP', serif;
+    font-size:1.15rem;
+    color:var(--earth);
+    margin-bottom:4px;
+  }
+  .step-sub{ font-size:0.8rem; color:var(--text-mid); margin-bottom:18px; }
+
+  /* ---------- Menu cards (Step1) ---------- */
+  .menu-option-card{
+    display:block;
+    border:1px solid var(--sand);
+    border-radius:10px;
+    padding:14px 14px 14px 44px;
+    margin-bottom:10px;
+    position:relative;
+    background:#fff;
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .menu-option-card input[type=checkbox]{
+    position:absolute;
+    left:14px; top:16px;
+    width:18px; height:18px;
+    accent-color:var(--earth);
+  }
+  .menu-option-card.checked{ border-color:var(--clay); background:#fbf5ee; }
+  .menu-option-card .badge{
+    display:inline-block;
+    font-size:0.62rem;
+    color:var(--sage);
+    border:1px solid var(--sage);
+    border-radius:10px;
+    padding:1px 8px;
+    margin-bottom:5px;
+  }
+  .menu-option-card h4{
+    font-family:'Noto Serif JP', serif;
+    font-weight:400;
+    font-size:0.95rem;
+    color:var(--text-dark);
+    margin-bottom:4px;
+  }
+  .menu-option-card p.desc{ font-size:0.76rem; color:var(--text-mid); margin-bottom:8px; }
+  .menu-option-card .price-row{
+    display:flex; align-items:baseline; gap:8px;
+    font-family:'Cormorant Garamond', serif;
+  }
+  .menu-option-card .price{ font-size:1.2rem; color:var(--clay); }
+  .menu-option-card .price-original{ font-size:0.85rem; color:var(--text-light); text-decoration:line-through; }
+  .menu-option-card .duration{ font-size:0.78rem; color:var(--text-mid); }
+
+  .option-section{ margin-top:26px; }
+  .option-section h3{
+    font-family:'Noto Serif JP', serif;
+    font-size:0.95rem;
+    color:var(--earth);
+    margin-bottom:4px;
+  }
+  .tentative-badge{
+    display:inline-block;
+    font-size:0.62rem;
+    color:var(--danger);
+    background:var(--danger-tint);
+    border-radius:4px;
+    padding:1px 6px;
+    margin-left:6px;
+    vertical-align:middle;
+  }
+  .option-section .hint{ font-size:0.74rem; color:var(--text-light); margin-bottom:10px; }
+  .option-card{
+    display:flex; align-items:center; gap:10px;
+    border:1px solid var(--sand);
+    border-radius:8px;
+    padding:10px 12px;
+    margin-bottom:8px;
+    background:#fff;
+    cursor:pointer;
+  }
+  .option-card.checked{ border-color:var(--clay); background:#fbf5ee; }
+  .option-card input[type=checkbox]{ width:17px; height:17px; accent-color:var(--earth); flex:0 0 auto; }
+  .option-card .opt-title{ flex:1; font-size:0.84rem; }
+  .option-card .opt-meta{ font-size:0.76rem; color:var(--text-mid); white-space:nowrap; }
+
+  .cupping-box{
+    margin-top:14px;
+    border:1px dashed var(--sage);
+    border-radius:10px;
+    padding:12px 12px 4px;
+    background:#f6f8f3;
+  }
+  .cupping-box h3{
+    font-family:'Noto Serif JP', serif;
+    font-size:0.88rem;
+    color:var(--earth);
+    margin-bottom:2px;
+  }
+  .cupping-box .hint{ font-size:0.72rem; color:var(--text-mid); margin-bottom:10px; }
+  .cupping-chip-list{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
+  .cupping-chip{
+    display:inline-flex; align-items:center; gap:6px;
+    border:1px solid var(--sage);
+    border-radius:20px;
+    padding:6px 12px;
+    font-size:0.78rem;
+    cursor:pointer;
+    background:#fff;
+  }
+  .cupping-chip.checked{ background:var(--sage-light); border-color:var(--sage); }
+  .cupping-chip input{ accent-color:var(--sage); width:15px; height:15px; }
+
+  /* ---------- Step2: Calendar ---------- */
+  .cal-nav{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .cal-nav button{
+    width:32px; height:32px;
+    border:1px solid var(--taupe);
+    background:#fff;
+    border-radius:50%;
+    cursor:pointer;
+    color:var(--earth);
+    font-size:1rem;
+  }
+  .cal-nav button:disabled{ opacity:0.3; cursor:not-allowed; }
+  .cal-nav .month-label{
+    font-family:'Noto Serif JP', serif;
+    font-size:1rem;
+    color:var(--earth);
+  }
+  .month-grid{
     display:grid;
-    grid-template-columns: 1fr 28px 320px;
-    gap:0;
-    padding:0;
-    border-bottom:none;
+    grid-template-columns:repeat(7, 1fr);
+    gap:4px;
+    margin-bottom:6px;
   }
-  .calendar-page{ padding:22px 24px 30px 36px; overflow-x:auto; }
-  .spine{
-    background:
-      linear-gradient(90deg, transparent 0, transparent 12px, var(--rule-strong) 12px, var(--rule-strong) 13px, transparent 13px),
-      repeating-linear-gradient(180deg, transparent 0 8px, rgba(38,36,32,0.05) 8px 9px);
-    box-shadow: inset 6px 0 10px -8px rgba(38,36,32,0.5), inset -6px 0 10px -8px rgba(38,36,32,0.5);
-  }
-  .list-page{
-    padding:22px 36px 30px 24px;
-    background:rgba(255,255,255,0.18);
-  }
-
-  /* ---------- Calendar grid ---------- */
-  table.calendar-grid{
-    border-collapse:collapse;
-    width:100%;
-    min-width:560px;
-    table-layout:fixed;
-  }
-  .calendar-grid th, .calendar-grid td{
-    border:1px solid var(--rule);
-    padding:0;
-  }
-  .calendar-grid col.time-col{ width:64px; }
-  .calendar-grid thead th{
-    font-family:var(--font-body);
-    font-weight:700;
-    font-size:12.5px;
-    padding:8px 4px;
-    background:var(--paper-deep);
+  .month-grid .dow{
     text-align:center;
+    font-size:0.68rem;
+    color:var(--text-light);
+    padding-bottom:4px;
   }
-  .calendar-grid thead th .dow{ display:block; letter-spacing:.05em; }
-  .calendar-grid thead th .ddate{ display:block; font-family:var(--font-mono); font-weight:400; font-size:11px; color:var(--ink-soft); margin-top:1px;}
-  .calendar-grid thead th.time-col{ background:transparent; border:none; }
-
-  .calendar-grid td.time-label{
-    font-family:var(--font-mono);
-    font-size:11px;
-    color:var(--ink-soft);
-    text-align:right;
-    padding:0 8px;
-    background:transparent;
-    border-left:none;
-    white-space:nowrap;
-    vertical-align:top;
-  }
-  .calendar-grid tr.hour-start td.time-label{ color:var(--ink); font-weight:600; }
-  .calendar-grid tr.hour-start td{ border-top:1px solid var(--rule-strong); }
-
-  .slot{
-    height:26px;
+  .month-grid .day-cell{
+    aspect-ratio:1;
+    display:flex; align-items:center; justify-content:center;
+    border-radius:8px;
+    font-size:0.82rem;
+    background:#fff;
+    border:1px solid var(--sand);
+    color:var(--text-dark);
     cursor:pointer;
     position:relative;
-    transition:background .1s ease;
   }
-  .slot.available{ background:var(--available-bg); }
-  .slot.available:hover{ background:var(--available-bg-hover); }
-  .slot.available:focus-visible{ background:var(--available-bg-hover); }
-  .slot.busy{
+  .month-grid .day-cell.other-month{ visibility:hidden; }
+  .month-grid .day-cell.disabled{
+    color:var(--text-light);
+    background:var(--cream);
+    border-color:var(--cream);
     cursor:not-allowed;
-    background:repeating-linear-gradient(45deg, var(--busy-a), var(--busy-a) 3px, var(--busy-b) 3px, var(--busy-b) 6px);
   }
-  .slot .busy-label{
-    position:absolute;
-    inset:2px 3px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:9px;
-    letter-spacing:.03em;
-    color:var(--busy-text);
-    font-weight:600;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-  }
-  .slot.past{
-    cursor:not-allowed;
-    background:repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(38,36,32,0.03) 5px, rgba(38,36,32,0.03) 10px);
-    color:var(--ink-faint);
-  }
-  .slot.reserved{
-    cursor:default;
-    background:var(--stamp-tint);
-  }
-  .slot .stamp-mini{
-    position:absolute;
-    inset:2px 3px;
-    border:1px solid var(--stamp);
-    color:var(--stamp-deep);
-    border-radius:2px;
-    font-size:9px;
-    font-family:var(--font-display);
-    font-weight:700;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    letter-spacing:.05em;
-    overflow:hidden;
-    white-space:nowrap;
-    text-overflow:ellipsis;
-    padding:0 2px;
-    transform:rotate(-3deg);
+  .month-grid .day-cell.today{ border-color:var(--clay); font-weight:600; }
+  .month-grid .day-cell.selected{ background:var(--earth); border-color:var(--earth); color:#fff; }
+  .month-grid .day-cell.holiday-mark::after{
+    content:'休';
+    position:absolute; bottom:2px; font-size:0.5rem; color:var(--danger);
   }
 
-  /* ---------- Lookup / cancel form ---------- */
-  .lookup-form{ margin-bottom:18px; }
-  .lookup-form .field{ margin-bottom:10px; }
-  .lookup-form label{ display:block; font-size:12px; color:var(--ink-soft); margin-bottom:4px; }
-  .lookup-form input{
-    width:100%;
-    padding:9px 10px;
-    border:1px solid var(--rule-strong);
-    border-radius:3px;
-    font-size:14px;
-    font-family:var(--font-body);
-    background:#fff;
-    color:var(--ink);
+  .time-slot-section{ margin-top:20px; }
+  .time-slot-section h3{
+    font-family:'Noto Serif JP', serif;
+    font-size:0.92rem;
+    color:var(--earth);
+    margin-bottom:10px;
   }
-  .lookup-form input:focus{ border-color:var(--teal); }
-  .btn-block{ width:100%; }
-  .lookup-hint{ font-size:11px; color:var(--ink-faint); margin-top:4px; }
-
-  /* ---------- Reservation list ---------- */
-  .reservation-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; }
-  .reservation-card{
-    border:1px solid var(--rule-strong);
-    background:var(--paper);
-    border-radius:3px;
-    padding:12px 14px;
-    display:flex;
-    flex-direction:column;
+  .time-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
     gap:8px;
   }
-  .reservation-card .row-top{
-    display:flex;
-    gap:10px;
-    align-items:flex-start;
-  }
-  .reservation-card .stamp{
-    flex:0 0 auto;
-    width:42px; height:42px;
-    border:2px solid var(--stamp);
-    color:var(--stamp-deep);
-    border-radius:50%;
-    display:flex; align-items:center; justify-content:center;
-    font-family:var(--font-display);
-    font-weight:700;
-    font-size:12px;
-    transform:rotate(-8deg);
-    letter-spacing:.02em;
-  }
-  .reservation-card .info{ flex:1; min-width:0; }
-  .reservation-card .dt{
-    font-family:var(--font-mono);
-    font-size:12.5px;
-    font-weight:600;
-    color:var(--ink);
-  }
-  .reservation-card .name{ font-size:13.5px; margin-top:2px; }
-  .reservation-card .mail{ font-size:11.5px; color:var(--ink-soft); word-break:break-all; margin-top:1px; }
-  .reservation-card .cancel-btn{
-    align-self:flex-end;
-    background:none;
-    border:1px solid var(--rule-strong);
-    border-radius:3px;
-    color:var(--ink-soft);
-    font-size:11px;
+  .time-slot-btn{
+    border:1px solid var(--taupe);
+    background:#fff;
+    border-radius:8px;
+    padding:9px 4px;
+    font-size:0.8rem;
+    font-family:'Cormorant Garamond', serif;
     cursor:pointer;
-    padding:4px 10px;
+    color:var(--text-dark);
   }
-  .reservation-card .cancel-btn:hover{ color:var(--stamp); }
-
-  .empty-state{
+  .time-slot-btn.selected{ background:var(--earth); border-color:var(--earth); color:#fff; }
+  .no-slots-msg{
+    font-size:0.8rem;
+    color:var(--text-mid);
+    background:var(--cream);
+    border-radius:8px;
+    padding:16px;
     text-align:center;
-    padding:28px 12px;
-    color:var(--ink-faint);
-    font-size:12.5px;
-    border:1px dashed var(--rule-strong);
-    border-radius:4px;
   }
-  .list-count{ font-family:var(--font-mono); font-size:11px; color:var(--ink-faint); margin-left:4px; }
 
-  /* ---------- Modal ---------- */
-  .modal-overlay{
-    position:fixed; inset:0;
-    background:rgba(38,36,32,0.45);
-    display:none;
-    align-items:center;
-    justify-content:center;
-    padding:20px;
-    z-index:50;
+  /* ---------- Step3: form ---------- */
+  .field{ margin-bottom:16px; }
+  .field label{
+    display:block; font-size:0.78rem; color:var(--text-mid); margin-bottom:5px;
   }
-  .modal-overlay.open{ display:flex; }
-  .modal{
-    background:var(--paper);
-    border:1px solid var(--rule-strong);
-    border-radius:4px;
-    max-width:380px;
+  .field label .req{ color:var(--danger); margin-left:3px; }
+  .field input, .field textarea{
     width:100%;
-    padding:26px 26px 22px;
-    box-shadow:0 24px 48px -12px rgba(0,0,0,0.4);
+    padding:11px 12px;
+    border:1px solid var(--taupe);
+    border-radius:6px;
+    font-size:0.92rem;
+    font-family:inherit;
+    background:#fff;
+    color:var(--text-dark);
   }
-  .modal h3{
-    font-family:var(--font-display);
-    font-size:17px;
-    margin:0 0 4px;
-  }
-  .modal .modal-slot{
-    font-family:var(--font-mono);
-    font-size:13px;
-    color:var(--teal-deep);
-    background:var(--teal-tint);
-    display:inline-block;
-    padding:4px 8px;
-    border-radius:3px;
+  .field input:focus, .field textarea:focus{ outline:none; border-color:var(--clay); }
+  .field textarea{ min-height:80px; resize:vertical; }
+  .field .err-msg{ display:none; color:var(--danger); font-size:0.72rem; margin-top:4px; }
+  .field.invalid input, .field.invalid textarea{ border-color:var(--danger); }
+  .field.invalid .err-msg{ display:block; }
+
+  /* ---------- Step4: confirm ---------- */
+  .confirm-block{
+    background:#fff;
+    border:1px solid var(--sand);
+    border-radius:10px;
+    padding:16px;
     margin-bottom:16px;
   }
-  .field{ margin-bottom:14px; }
-  .field label{ display:block; font-size:12px; color:var(--ink-soft); margin-bottom:4px; }
-  .field input{
-    width:100%;
-    padding:9px 10px;
-    border:1px solid var(--rule-strong);
-    border-radius:3px;
-    font-size:14px;
-    font-family:var(--font-body);
-    background:#fff;
-    color:var(--ink);
+  .confirm-block h3{
+    font-family:'Noto Serif JP', serif;
+    font-size:0.88rem;
+    color:var(--earth);
+    margin-bottom:10px;
+    padding-bottom:8px;
+    border-bottom:1px solid var(--sand);
   }
-  .field input:focus{ border-color:var(--teal); }
-  .field .err{ color:var(--stamp-deep); font-size:11.5px; margin-top:4px; display:none; }
-  .field.invalid .err{ display:block; }
-  .field.invalid input{ border-color:var(--stamp); }
+  .confirm-row{ display:flex; justify-content:space-between; gap:10px; font-size:0.82rem; padding:5px 0; }
+  .confirm-row .k{ color:var(--text-mid); flex:0 0 auto; }
+  .confirm-row .v{ text-align:right; color:var(--text-dark); }
+  .confirm-total{
+    display:flex; justify-content:space-between; align-items:baseline;
+    border-top:1px solid var(--sand);
+    margin-top:8px; padding-top:10px;
+  }
+  .confirm-total .label{ font-size:0.82rem; color:var(--text-mid); }
+  .confirm-total .amount{ font-family:'Cormorant Garamond', serif; font-size:1.5rem; color:var(--clay); }
 
-  .modal-actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:18px; }
-  .btn{
-    padding:9px 18px;
-    border-radius:3px;
-    font-size:13px;
-    cursor:pointer;
-    border:1px solid transparent;
+  .policy-box{
+    background:var(--cream);
+    border-radius:10px;
+    padding:14px 16px;
+    margin-bottom:16px;
+    font-size:0.78rem;
+    color:var(--text-mid);
   }
-  .btn-primary{ background:var(--teal); color:#fff; border-color:var(--teal-deep); }
-  .btn-primary:hover{ background:var(--teal-deep); }
-  .btn-secondary{ background:none; border-color:var(--rule-strong); color:var(--ink-soft); }
-  .btn-secondary:hover{ color:var(--ink); }
+  .policy-box h4{
+    font-family:'Noto Serif JP', serif;
+    font-size:0.85rem;
+    color:var(--earth);
+    margin-bottom:6px;
+  }
+  .policy-box p{ margin-bottom:4px; }
+  .policy-box .strong{ color:var(--danger); font-weight:600; }
+  .policy-box .pay-emphasis{ font-weight:600; color:var(--text-dark); }
+
+  .agree-row{
+    display:flex; align-items:flex-start; gap:10px;
+    background:#fff;
+    border:1px solid var(--taupe);
+    border-radius:8px;
+    padding:12px 14px;
+    margin-bottom:16px;
+  }
+  .agree-row input{ width:19px; height:19px; margin-top:2px; accent-color:var(--earth); flex:0 0 auto; }
+  .agree-row label{ font-size:0.8rem; color:var(--text-dark); }
+  .submit-error{
+    display:none;
+    background:var(--danger-tint);
+    color:var(--danger);
+    border-radius:8px;
+    padding:12px 14px;
+    font-size:0.8rem;
+    margin-bottom:14px;
+  }
+  .submit-error.show{ display:block; }
+
+  /* ---------- Step5: complete ---------- */
+  .complete-hero{ text-align:center; padding:10px 0 22px; }
+  .complete-hero .icon{ font-size:2.4rem; margin-bottom:8px; }
+  .complete-hero h2{
+    font-family:'Noto Serif JP', serif;
+    font-size:1.2rem;
+    color:var(--earth);
+    margin-bottom:6px;
+  }
+  .complete-hero p{ font-size:0.84rem; color:var(--text-mid); }
+  .reservation-no{
+    text-align:center;
+    font-family:'Cormorant Garamond', serif;
+    font-size:0.8rem;
+    color:var(--text-light);
+    margin-bottom:22px;
+    word-break:break-all;
+  }
+  .reservation-no b{ color:var(--text-dark); font-size:0.92rem; }
+
+  .line-cta{
+    text-align:center;
+    background:var(--cream);
+    border-radius:14px;
+    padding:22px 18px;
+    margin-bottom:20px;
+  }
+  .line-cta p.lead{ font-size:0.85rem; color:var(--text-dark); margin-bottom:14px; }
+  .line-cta img{
+    width:200px; height:200px;
+    max-width:60vw;
+    border-radius:10px;
+    background:#fff;
+    padding:8px;
+    border:1px solid var(--sand);
+  }
+  .line-cta .qr-caption{ font-size:0.7rem; color:var(--text-light); margin:8px 0 16px; }
+  .btn-line{
+    display:inline-block;
+    background:var(--line-green);
+    color:#fff;
+    padding:12px 28px;
+    border-radius:30px;
+    font-size:0.9rem;
+    text-decoration:none;
+  }
+
+  .back-top-link{
+    display:block;
+    text-align:center;
+    font-size:0.8rem;
+    color:var(--text-mid);
+    margin-top:8px;
+    text-decoration:underline;
+  }
+
+  /* ---------- Fixed bottom bar ---------- */
+  .bottom-bar{
+    position:fixed; left:0; right:0; bottom:0;
+    background:#fff;
+    border-top:1px solid var(--sand);
+    box-shadow:0 -4px 16px rgba(74,48,32,0.08);
+    padding:10px 18px calc(10px + env(safe-area-inset-bottom));
+    z-index:40;
+  }
+  .bottom-bar .totals{
+    display:flex; justify-content:space-between; align-items:baseline;
+    max-width:480px; margin:0 auto 8px;
+    font-size:0.78rem; color:var(--text-mid);
+  }
+  .bottom-bar .totals b{ font-family:'Cormorant Garamond', serif; font-size:1.15rem; color:var(--clay); }
+  .bottom-bar .btn-row{
+    display:flex; gap:10px;
+    max-width:480px; margin:0 auto;
+  }
+  .btn{
+    flex:1;
+    padding:13px 10px;
+    border-radius:8px;
+    font-size:0.9rem;
+    border:1px solid transparent;
+    cursor:pointer;
+    text-align:center;
+  }
+  .btn-secondary{ background:#fff; border-color:var(--taupe); color:var(--text-mid); flex:0 0 88px; }
+  .btn-primary{ background:var(--earth); color:#fff; }
+  .btn-primary:disabled{ background:var(--taupe); cursor:not-allowed; }
+
+  /* ---------- Lookup / edit panel ---------- */
+  .lookup-panel{ display:none; padding:20px 0 40px; }
+  .lookup-panel.active{ display:block; }
+  .lookup-result{
+    background:#fff;
+    border:1px solid var(--sand);
+    border-radius:10px;
+    padding:16px;
+    margin-top:16px;
+  }
+  .lookup-result .msg{ font-size:0.82rem; color:var(--text-mid); }
+  .lookup-result.error .msg{ color:var(--danger); }
+  .save-msg{ font-size:0.78rem; color:var(--sage); margin-top:6px; display:none; }
+  .save-msg.show{ display:block; }
 
   /* ---------- Toast ---------- */
   .toast{
-    position:fixed;
-    bottom:26px; left:50%;
-    transform:translateX(-50%) translateY(10px) scale(.96);
-    background:var(--ink);
-    color:var(--paper);
-    padding:12px 20px;
-    border-radius:4px;
-    font-size:13px;
-    display:flex; align-items:center; gap:10px;
-    opacity:0;
-    pointer-events:none;
-    transition:opacity .18s ease, transform .18s ease;
+    position:fixed; left:50%; bottom:110px;
+    transform:translateX(-50%) translateY(10px);
+    background:var(--bark); color:#fff;
+    padding:11px 18px; border-radius:6px;
+    font-size:0.8rem;
+    opacity:0; pointer-events:none;
+    transition:opacity .2s ease, transform .2s ease;
     z-index:60;
+    max-width:90vw;
+    text-align:center;
   }
-  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0) scale(1); }
-  .toast .stamp-tag{
-    border:1.5px solid var(--stamp);
-    color:#e8b3a8;
-    border-radius:3px;
-    padding:1px 6px;
-    font-family:var(--font-display);
-    font-weight:700;
-    font-size:11px;
-    transform:rotate(-6deg);
-  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 
-  @media (max-width: 880px){
-    .board{ grid-template-columns:1fr; }
-    .spine{ display:none; }
-    .list-page{ border-top:1px solid var(--rule); }
-  }
-  @media (prefers-reduced-motion: reduce){
-    *{ transition:none !important; animation:none !important; }
-  }
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
 </style>
 </head>
 <body>
 
-<div class="ledger">
-
-  <header class="ledger-header">
-    <div class="title-block">
-      <h1>予約受付台帳</h1>
-      <span class="subtitle">RESERVATION LEDGER</span>
-    </div>
-    <div class="header-right">
-      <span class="today-note" id="todayNote"></span>
-      <a class="admin-link" href="admin.html">管理者ページ ▸</a>
-    </div>
-  </header>
-
-  <div class="storage-warning" id="storageWarning">
-    このブラウザでは保存機能（localStorage）が利用できないため、予約内容はページを再読み込みすると消えてしまいます。プライベートブラウジングモードなどをご利用の場合は、通常モードでお試しください。
+<header class="top-header">
+  <div class="row">
+    <a class="top-logo" href="#" id="logoLink">Co<span>Co</span>sia ご予約</a>
+    <a class="lookup-link" href="#" id="openLookupBtn">予約の確認・変更</a>
   </div>
+  <nav class="step-indicator" id="stepIndicator" aria-hidden="true">
+    <div class="step-item" data-step="1"><div class="num">1</div>メニュー</div>
+    <div class="step-item" data-step="2"><div class="num">2</div>日時</div>
+    <div class="step-item" data-step="3"><div class="num">3</div>お客様情報</div>
+    <div class="step-item" data-step="4"><div class="num">4</div>確認</div>
+    <div class="step-item" data-step="5"><div class="num">5</div>完了</div>
+  </nav>
+</header>
 
-  <section style="padding-bottom:0;">
-    <h2 class="section-title"><span class="num">01</span> 週間カレンダー</h2>
-    <p class="section-desc">空いている時間帯（緑色）をクリックすると、その場で予約を確定できます。</p>
-    <div class="toolbar">
-      <div class="week-nav">
-        <button id="prevWeekBtn" aria-label="前の週">‹</button>
-        <span class="range" id="weekRange"></span>
-        <button id="nextWeekBtn" aria-label="次の週">›</button>
-        <button class="today-btn" id="todayBtn">今週</button>
-      </div>
-      <div class="legend">
-        <span><i class="swatch sw-available"></i>空き</span>
-        <span><i class="swatch sw-busy"></i>予定あり</span>
-        <span><i class="swatch sw-reserved"></i>予約済</span>
-      </div>
+<main class="wrap" id="wizardWrap">
+
+  <!-- STEP 1: メニュー選択 -->
+  <section class="step-panel" data-step="1" id="panel1">
+    <h2 class="step-title">ご希望のメニューをお選びください</h2>
+    <p class="step-sub">複数選択できます。合計時間・合計金額は下部に表示されます。</p>
+    <div id="menuList"></div>
+
+    <div class="option-section">
+      <h3>オプション<span class="tentative-badge">※オプション内容・料金は仮設定です</span></h3>
+      <p class="hint">お好みでメニューに追加できます（複数選択可）。</p>
+      <div id="optionList"></div>
+    </div>
+
+    <div class="cupping-box" id="cuppingBox" style="display:none;">
+      <h3>選べるオプション（追加料金なし）</h3>
+      <p class="hint">火罐カッピング60分の枠内で組み合わせる内容です。当日の体調に合わせて変更いただくこともできます。</p>
+      <div class="cupping-chip-list" id="cuppingList"></div>
     </div>
   </section>
 
-  <div class="board">
-    <div class="calendar-page">
-      <table class="calendar-grid" id="calendarGrid">
-        <colgroup>
-          <col class="time-col">
-          <col><col><col><col><col>
-        </colgroup>
-        <thead id="calendarHead"></thead>
-        <tbody id="calendarBody"></tbody>
-      </table>
+  <!-- STEP 2: 日時選択 -->
+  <section class="step-panel" data-step="2" id="panel2">
+    <h2 class="step-title">日時をお選びください</h2>
+    <p class="step-sub">ご希望メニューの合計時間ぶん、連続して空いている時間のみ表示されます。</p>
+    <div class="cal-nav">
+      <button type="button" id="prevMonthBtn" aria-label="前の月">‹</button>
+      <span class="month-label" id="monthLabel"></span>
+      <button type="button" id="nextMonthBtn" aria-label="次の月">›</button>
     </div>
-    <div class="spine"></div>
-    <div class="list-page">
-      <h2 class="section-title"><span class="num">02</span> 予約の確認・キャンセル</h2>
-      <p class="section-desc">予約時に入力したメールアドレスを入力すると、ご本人の予約を確認・キャンセルできます。</p>
+    <div class="month-grid" id="monthGridDow"></div>
+    <div class="month-grid" id="monthGrid"></div>
 
-      <form id="lookupForm" class="lookup-form">
-        <div class="field" id="lookupField">
-          <label for="lookupEmail">メールアドレス</label>
-          <input type="email" id="lookupEmail" autocomplete="email" placeholder="taro@example.com">
-          <div class="err">正しいメールアドレスを入力してください。</div>
-        </div>
-        <button type="submit" class="btn btn-primary btn-block">予約を確認する</button>
-      </form>
-
-      <span class="list-count" id="lookupCount"></span>
-      <ul class="reservation-list" id="lookupResults"></ul>
+    <div class="time-slot-section" id="timeSlotSection" style="display:none;">
+      <h3 id="selectedDateLabel"></h3>
+      <div class="time-grid" id="timeGrid"></div>
+      <p class="no-slots-msg" id="noSlotsMsg" style="display:none;">この日は、ご希望の合計時間で確保できる空き枠がありません。他の日をお選びください。</p>
     </div>
-  </div>
+  </section>
 
-</div>
-
-<!-- Modal -->
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <h3 id="modalTitle">予約内容の確認</h3>
-    <span class="modal-slot" id="modalSlotText"></span>
-    <form id="reservationForm">
-      <div class="field" id="nameField">
-        <label for="nameInput">氏名</label>
-        <input type="text" id="nameInput" autocomplete="name" placeholder="山田 太郎">
-        <div class="err">氏名を入力してください。</div>
+  <!-- STEP 3: お客様情報入力 -->
+  <section class="step-panel" data-step="3" id="panel3">
+    <h2 class="step-title">お客様情報をご入力ください</h2>
+    <p class="step-sub">ご予約の確認・変更にはお電話番号を使用します。</p>
+    <form id="customerForm" novalidate>
+      <div class="field" id="fName">
+        <label for="inName">お名前<span class="req">必須</span></label>
+        <input type="text" id="inName" autocomplete="name" placeholder="山田 太郎" required>
+        <div class="err-msg">お名前を入力してください。</div>
       </div>
-      <div class="field" id="emailField">
-        <label for="emailInput">メールアドレス</label>
-        <input type="email" id="emailInput" autocomplete="email" placeholder="taro@example.com">
-        <div class="err">正しいメールアドレスを入力してください。</div>
+      <div class="field" id="fKana">
+        <label for="inKana">フリガナ<span class="req">必須</span></label>
+        <input type="text" id="inKana" autocomplete="off" placeholder="ヤマダ タロウ" required>
+        <div class="err-msg">フリガナを入力してください。</div>
       </div>
-      <div class="modal-actions">
-        <button type="button" class="btn btn-secondary" id="modalCancelBtn">キャンセル</button>
-        <button type="submit" class="btn btn-primary">予約を確定する</button>
+      <div class="field" id="fTel">
+        <label for="inTel">電話番号<span class="req">必須</span></label>
+        <input type="tel" id="inTel" autocomplete="tel" placeholder="09012345678" inputmode="numeric" required>
+        <div class="err-msg">ハイフンなしの半角数字で電話番号を入力してください。</div>
+      </div>
+      <div class="field" id="fEmail">
+        <label for="inEmail">メールアドレス<span class="req">必須</span></label>
+        <input type="email" id="inEmail" autocomplete="email" placeholder="taro@example.com" required>
+        <div class="err-msg">正しいメールアドレスを入力してください。</div>
+      </div>
+      <div class="field">
+        <label for="inNote">ご要望・ご相談（任意）</label>
+        <textarea id="inNote" placeholder="体の気になる部分や、当日ご相談したいことがあればご記入ください"></textarea>
       </div>
     </form>
+  </section>
+
+  <!-- STEP 4: 確認・規約同意 -->
+  <section class="step-panel" data-step="4" id="panel4">
+    <h2 class="step-title">ご予約内容の確認</h2>
+    <p class="step-sub">内容にお間違いがないかご確認ください。</p>
+
+    <div class="confirm-block">
+      <h3>日時</h3>
+      <div id="confirmDateTime"></div>
+    </div>
+
+    <div class="confirm-block">
+      <h3>メニュー</h3>
+      <div id="confirmMenus"></div>
+      <div class="confirm-total">
+        <span class="label">合計時間 / 合計金額</span>
+        <span class="amount" id="confirmTotal"></span>
+      </div>
+    </div>
+
+    <div class="confirm-block">
+      <h3>お客様情報</h3>
+      <div id="confirmCustomer"></div>
+    </div>
+
+    <div class="policy-box">
+      <h4>キャンセルについて</h4>
+      <p>ご予約の変更・キャンセルは<strong>前日まで</strong>にご連絡ください。</p>
+      <p class="strong">当日のキャンセル・無断キャンセルは、施術料金の100%を申し受けます。</p>
+      <h4 style="margin-top:12px;">お支払いについて</h4>
+      <p class="pay-emphasis">お支払いは現金をお願いしております。</p>
+      <p>PayPay・各種クレジットカード（Visa / Mastercard / JCB / American Express）・交通系ICもご利用いただけます。</p>
+      <p>事前決済はありません。料金は当日、店頭でお支払いください。</p>
+    </div>
+
+    <div class="agree-row">
+      <input type="checkbox" id="agreeCheckbox">
+      <label for="agreeCheckbox">上記のキャンセル規約・お支払い方法に同意のうえ、予約を確定します。</label>
+    </div>
+
+    <div class="submit-error" id="submitError"></div>
+  </section>
+
+  <!-- STEP 5: 完了 -->
+  <section class="step-panel" data-step="5" id="panel5">
+    <div class="complete-hero">
+      <div class="icon">🌿</div>
+      <h2>ご予約ありがとうございます</h2>
+      <p>当日はお気をつけてお越しください。</p>
+    </div>
+    <div class="reservation-no">予約番号 <b id="completeResNo"></b></div>
+
+    <div class="confirm-block">
+      <h3>ご予約内容</h3>
+      <div id="completeSummary"></div>
+    </div>
+
+    <div class="line-cta">
+      <p class="lead">メニュー変更のご相談や、次回のご予約もLINEから承れます。<br>ぜひ公式LINEをお友だち追加ください。</p>
+      <a href="#" id="lineQrLink" target="_blank" rel="noopener">
+        <img id="lineQrImg" alt="CoCosia公式LINE 友だち追加QRコード">
+      </a>
+      <p class="qr-caption">スマホのカメラで読み取ってください</p>
+      <a class="btn-line" id="lineBtnLink" href="#" target="_blank" rel="noopener">友だち追加する</a>
+    </div>
+
+    <a class="back-top-link" href="#" id="newReservationLink">別の予約をする</a>
+  </section>
+
+</main>
+
+<!-- 予約の確認・変更パネル -->
+<main class="wrap lookup-panel" id="lookupPanel">
+  <h2 class="step-title">予約の確認・変更</h2>
+  <p class="step-sub">予約番号とご予約時のお電話番号を入力すると、電話番号・メールアドレスを修正できます。</p>
+  <form id="lookupForm">
+    <div class="field">
+      <label for="lookupResNo">予約番号<span class="req">必須</span></label>
+      <input type="text" id="lookupResNo" autocomplete="off" placeholder="予約完了画面に表示された番号">
+    </div>
+    <div class="field">
+      <label for="lookupTel">お電話番号<span class="req">必須</span></label>
+      <input type="tel" id="lookupTel" autocomplete="tel" inputmode="numeric" placeholder="ご予約時に入力した電話番号">
+    </div>
+    <button type="submit" class="btn btn-primary" style="width:100%;">確認する</button>
+  </form>
+  <div class="lookup-result" id="lookupResult" style="display:none;"></div>
+  <a class="back-top-link" href="#" id="closeLookupBtn">予約フローに戻る</a>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<!-- 予約入力中のみ表示する固定バー -->
+<div class="bottom-bar" id="bottomBar">
+  <div class="totals">
+    <span>合計時間 <b id="barMinutes">0分</b></span>
+    <span>合計金額 <b id="barPrice">¥0</b></span>
+  </div>
+  <div class="btn-row">
+    <button type="button" class="btn btn-secondary" id="backBtn" style="visibility:hidden;">戻る</button>
+    <button type="button" class="btn btn-primary" id="nextBtn" disabled>次へ</button>
   </div>
 </div>
-
-<div class="toast" id="toast"><span class="stamp-tag">確定</span><span id="toastText"></span></div>
 
 <script src="shared.js"></script>
 <script>
 (function(){
   "use strict";
-
-  /* ================= Constants ================= */
-  var DOW_LABELS = ["月","火","水","木","金"];
-  var BUSINESS_START = 9 * 60;   // 09:00 in minutes
-  var BUSINESS_END   = 18 * 60;  // 18:00 in minutes
-  var STEP = 30;                 // minutes
+  var L = window.Ledger;
+  var CFG = L.BOOKING_CONFIG;
 
   /* ================= State ================= */
-  var icsEvents = Ledger.loadIcsEvents();       // read-only here; managed on the admin page
-  var reservations = Ledger.loadReservations(); // [{id,dateISO,startMin,endMin,name,email}]
-  var currentWeekStart = Ledger.mondayOf(new Date());
-  var pendingSlot = null; // {dateISO, startMin, endMin}
+  var state = {
+    step: 1,
+    selectedMenuIds: [],
+    selectedOptionIds: [],
+    selectedCuppingOptionIds: [],
+    calendarMonth: L.startOfMonth(new Date()),
+    monthBlockedFullDayISOs: [],
+    dateISO: null,
+    startMin: null,
+    endMin: null,
+    customer: { name:"", kana:"", tel:"", email:"", note:"" },
+    lastReservation: null
+  };
 
-  /* ================= Calendar rendering ================= */
-  var calendarHead = document.getElementById("calendarHead");
-  var calendarBody = document.getElementById("calendarBody");
-  var weekRange = document.getElementById("weekRange");
-  var prevWeekBtn = document.getElementById("prevWeekBtn");
-  var nextWeekBtn = document.getElementById("nextWeekBtn");
-  var todayBtn = document.getElementById("todayBtn");
+  function selectedMenus(){
+    return L.MENU_ITEMS.filter(function(m){ return state.selectedMenuIds.indexOf(m.id) !== -1; });
+  }
+  function selectedOptions(){
+    return L.OPTION_ITEMS.filter(function(o){ return state.selectedOptionIds.indexOf(o.id) !== -1; });
+  }
+  function selectedCuppingOptions(){
+    return L.CUPPING_OPTIONS.filter(function(c){ return state.selectedCuppingOptionIds.indexOf(c.id) !== -1; });
+  }
+  function isCuppingSelected(){
+    return state.selectedMenuIds.indexOf(L.CUPPING_MENU_ID) !== -1;
+  }
+  function totalMinutes(){ return L.computeTotalMinutes(selectedMenus(), selectedOptions()); }
+  function totalPrice(){ return L.computeTotalPrice(selectedMenus(), selectedOptions()); }
+  function currentStartWindow(){ return L.combineStartWindows(selectedMenus()); }
 
-  prevWeekBtn.addEventListener("click", function(){ currentWeekStart = Ledger.addDays(currentWeekStart, -7); renderCalendar(); });
-  nextWeekBtn.addEventListener("click", function(){ currentWeekStart = Ledger.addDays(currentWeekStart, 7); renderCalendar(); });
-  todayBtn.addEventListener("click", function(){ currentWeekStart = Ledger.mondayOf(new Date()); renderCalendar(); });
+  /* ================= Step indicator / bottom bar ================= */
+  var stepIndicator = document.getElementById("stepIndicator");
+  var bottomBar = document.getElementById("bottomBar");
+  var barMinutes = document.getElementById("barMinutes");
+  var barPrice = document.getElementById("barPrice");
+  var backBtn = document.getElementById("backBtn");
+  var nextBtn = document.getElementById("nextBtn");
 
-  function renderCalendar(){
-    var days = [];
-    for (var i=0;i<5;i++){ days.push(Ledger.addDays(currentWeekStart, i)); }
-
-    weekRange.textContent = Ledger.fmtMonthDate(days[0]) + " 〜 " + Ledger.fmtMonthDate(days[4]) + "  (" + days[0].getFullYear() + ")";
-
-    // Head
-    var headRow = document.createElement("tr");
-    var thTime = document.createElement("th");
-    thTime.className = "time-col";
-    headRow.appendChild(thTime);
-    days.forEach(function(d, idx){
-      var th = document.createElement("th");
-      var dow = document.createElement("span");
-      dow.className = "dow";
-      dow.textContent = DOW_LABELS[idx];
-      var dd = document.createElement("span");
-      dd.className = "ddate";
-      dd.textContent = Ledger.fmtMonthDate(d);
-      th.appendChild(dow); th.appendChild(dd);
-      headRow.appendChild(th);
+  function renderStepIndicator(){
+    Array.prototype.forEach.call(stepIndicator.querySelectorAll(".step-item"), function(el){
+      var n = Number(el.getAttribute("data-step"));
+      el.classList.remove("done", "current");
+      if (n < state.step) el.classList.add("done");
+      else if (n === state.step) el.classList.add("current");
     });
-    calendarHead.innerHTML = "";
-    calendarHead.appendChild(headRow);
+  }
 
-    // Body
-    calendarBody.innerHTML = "";
-    var now = new Date();
-    for (var min = BUSINESS_START; min < BUSINESS_END; min += STEP){
-      var tr = document.createElement("tr");
-      if (min % 60 === 0) tr.className = "hour-start";
+  function renderBottomBar(){
+    barMinutes.textContent = totalMinutes() + "分";
+    barPrice.textContent = "¥" + totalPrice().toLocaleString();
+    backBtn.style.visibility = state.step === 1 ? "hidden" : "visible";
+    nextBtn.textContent = state.step === 4 ? "予約を確定する" : "次へ";
+    nextBtn.disabled = !isStepValid(state.step);
+    bottomBar.style.display = (state.step === 5) ? "none" : "block";
+    document.body.style.paddingBottom = (state.step === 5) ? "24px" : "96px";
+  }
 
-      var tdLabel = document.createElement("td");
-      tdLabel.className = "time-label";
-      tdLabel.textContent = Ledger.minutesToLabel(min);
-      tr.appendChild(tdLabel);
+  function isStepValid(step){
+    if (step === 1) return state.selectedMenuIds.length > 0;
+    if (step === 2) return !!(state.dateISO && state.startMin !== null);
+    if (step === 3) return isCustomerValid(false);
+    if (step === 4) return document.getElementById("agreeCheckbox").checked;
+    return true;
+  }
 
-      days.forEach(function(d){
-        var td = document.createElement("td");
-        var dISO = Ledger.dateISO(d);
-        var startMin = min, endMin = min + STEP;
+  /* ================= Panels ================= */
+  var panels = Array.prototype.slice.call(document.querySelectorAll(".step-panel"));
+  function showStep(n){
+    state.step = n;
+    panels.forEach(function(p){
+      p.classList.toggle("active", Number(p.getAttribute("data-step")) === n);
+    });
+    renderStepIndicator();
+    renderBottomBar();
+    window.scrollTo({ top:0, behavior:"instant" in window ? "instant" : "auto" });
+    if (n === 2) renderCalendar();
+    if (n === 4) renderConfirm();
+  }
 
-        var cellStart = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0,0,0);
-        cellStart.setMinutes(startMin);
+  /* ================= STEP 1: メニュー ================= */
+  var menuListEl = document.getElementById("menuList");
+  var optionListEl = document.getElementById("optionList");
+  var cuppingBox = document.getElementById("cuppingBox");
+  var cuppingListEl = document.getElementById("cuppingList");
 
-        var reservation = Ledger.findReservation(reservations, dISO, startMin);
-        var busySummary = !reservation ? Ledger.isBusy(icsEvents, d, startMin, endMin) : null;
-        var isPast = cellStart <= now;
-
-        var div = document.createElement("div");
-        div.className = "slot";
-
-        if (reservation){
-          // Personal details are intentionally not shown here; only the
-          // reservation holder (via email lookup) or the admin can see them.
-          div.classList.add("reserved");
-          div.title = "予約済み: " + Ledger.minutesToLabel(reservation.startMin) + "〜" + Ledger.minutesToLabel(reservation.endMin);
-          var tag = document.createElement("span");
-          tag.className = "stamp-mini";
-          tag.textContent = "予約済";
-          div.appendChild(tag);
-        } else if (busySummary){
-          div.classList.add("busy");
-          div.title = "予定あり";
-          var busyLabel = document.createElement("span");
-          busyLabel.className = "busy-label";
-          busyLabel.textContent = "予定あり";
-          div.appendChild(busyLabel);
-        } else if (isPast){
-          div.classList.add("past");
-          div.title = "受付終了";
-        } else {
-          div.classList.add("available");
-          div.tabIndex = 0;
-          div.setAttribute("role", "button");
-          div.title = "クリックして予約: " + Ledger.minutesToLabel(startMin) + "〜" + Ledger.minutesToLabel(endMin);
-          div.addEventListener("click", makeSlotHandler(dISO, startMin, endMin, d));
-          div.addEventListener("keydown", function(handler){
-            return function(e){
-              if (e.key === "Enter" || e.key === " "){ e.preventDefault(); handler(); }
-            };
-          }(makeSlotHandler(dISO, startMin, endMin, d)));
-        }
-
-        td.appendChild(div);
-        tr.appendChild(td);
+  function renderMenuList(){
+    menuListEl.innerHTML = "";
+    L.MENU_ITEMS.forEach(function(m){
+      var label = document.createElement("label");
+      label.className = "menu-option-card" + (state.selectedMenuIds.indexOf(m.id) !== -1 ? " checked" : "");
+      var priceHtml = "¥" + m.price.toLocaleString();
+      if (m.originalPrice){
+        priceHtml = '<span class="price-original">¥' + m.originalPrice.toLocaleString() + '</span> <span class="price">¥' + m.price.toLocaleString() + '</span>';
+      } else {
+        priceHtml = '<span class="price">¥' + m.price.toLocaleString() + '</span>';
+      }
+      label.innerHTML =
+        '<input type="checkbox" data-menu-id="' + m.id + '" ' + (state.selectedMenuIds.indexOf(m.id) !== -1 ? "checked" : "") + '>' +
+        '<span class="badge">' + L.escapeHtml(m.badge) + '</span>' +
+        '<h4>' + L.escapeHtml(m.title) + '</h4>' +
+        '<p class="desc">' + L.escapeHtml(m.desc) + '</p>' +
+        '<div class="price-row">' + priceHtml + '<span class="duration">（' + m.durationMin + '分）</span></div>';
+      menuListEl.appendChild(label);
+    });
+    Array.prototype.forEach.call(menuListEl.querySelectorAll('input[type=checkbox]'), function(cb){
+      cb.addEventListener("change", function(){
+        var id = cb.getAttribute("data-menu-id");
+        toggleInArray(state.selectedMenuIds, id, cb.checked);
+        // メニュー変更で日時選択がリセットされる可能性があるため、選択済み日時をクリア
+        state.dateISO = null; state.startMin = null; state.endMin = null;
+        renderMenuList();
+        renderOptionList();
+        renderCuppingBox();
+        renderBottomBar();
       });
-
-      calendarBody.appendChild(tr);
-    }
+    });
   }
 
-  function makeSlotHandler(dISO, startMin, endMin, dayDate){
-    return function(){ openModal(dISO, startMin, endMin, dayDate); };
+  function renderOptionList(){
+    optionListEl.innerHTML = "";
+    L.OPTION_ITEMS.forEach(function(o){
+      var label = document.createElement("label");
+      label.className = "option-card" + (state.selectedOptionIds.indexOf(o.id) !== -1 ? " checked" : "");
+      label.innerHTML =
+        '<input type="checkbox" data-option-id="' + o.id + '" ' + (state.selectedOptionIds.indexOf(o.id) !== -1 ? "checked" : "") + '>' +
+        '<span class="opt-title">' + L.escapeHtml(o.title) + '</span>' +
+        '<span class="opt-meta">+' + o.durationMin + '分 ¥' + o.price.toLocaleString() + '</span>';
+      optionListEl.appendChild(label);
+    });
+    Array.prototype.forEach.call(optionListEl.querySelectorAll('input[type=checkbox]'), function(cb){
+      cb.addEventListener("change", function(){
+        var id = cb.getAttribute("data-option-id");
+        toggleInArray(state.selectedOptionIds, id, cb.checked);
+        state.dateISO = null; state.startMin = null; state.endMin = null;
+        renderOptionList();
+        renderBottomBar();
+      });
+    });
   }
 
-  /* ================= Modal (booking) ================= */
-  var modalOverlay = document.getElementById("modalOverlay");
-  var modalSlotText = document.getElementById("modalSlotText");
-  var reservationForm = document.getElementById("reservationForm");
-  var nameInput = document.getElementById("nameInput");
-  var emailInput = document.getElementById("emailInput");
-  var nameField = document.getElementById("nameField");
-  var emailField = document.getElementById("emailField");
-  var modalCancelBtn = document.getElementById("modalCancelBtn");
-
-  function openModal(dISO, startMin, endMin, dayDate){
-    pendingSlot = { dateISO: dISO, startMin: startMin, endMin: endMin };
-    modalSlotText.textContent = Ledger.fmtFullDate(dayDate) + " " + Ledger.minutesToLabel(startMin) + "〜" + Ledger.minutesToLabel(endMin);
-    nameInput.value = ""; emailInput.value = "";
-    nameField.classList.remove("invalid"); emailField.classList.remove("invalid");
-    modalOverlay.classList.add("open");
-    setTimeout(function(){ nameInput.focus(); }, 30);
-  }
-  function closeModal(){
-    modalOverlay.classList.remove("open");
-    pendingSlot = null;
-  }
-  modalCancelBtn.addEventListener("click", closeModal);
-  modalOverlay.addEventListener("click", function(e){
-    if (e.target === modalOverlay) closeModal();
-  });
-  document.addEventListener("keydown", function(e){
-    if (e.key === "Escape" && modalOverlay.classList.contains("open")) closeModal();
-  });
-
-  reservationForm.addEventListener("submit", function(e){
-    e.preventDefault();
-    if (!pendingSlot) return;
-
-    var name = nameInput.value.trim();
-    var email = emailInput.value.trim();
-    var emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    var ok = true;
-
-    if (!name){ nameField.classList.add("invalid"); ok = false; } else { nameField.classList.remove("invalid"); }
-    if (!emailOk){ emailField.classList.add("invalid"); ok = false; } else { emailField.classList.remove("invalid"); }
-    if (!ok) return;
-
-    // guard against the slot being taken since the modal opened
-    var already = Ledger.findReservation(reservations, pendingSlot.dateISO, pendingSlot.startMin);
-    if (already){
-      closeModal();
-      renderCalendar();
-      showToast("この時間枠は既に予約済みです");
+  function renderCuppingBox(){
+    if (!isCuppingSelected()){
+      cuppingBox.style.display = "none";
+      state.selectedCuppingOptionIds = [];
       return;
     }
+    cuppingBox.style.display = "block";
+    cuppingListEl.innerHTML = "";
+    L.CUPPING_OPTIONS.forEach(function(c){
+      var label = document.createElement("label");
+      label.className = "cupping-chip" + (state.selectedCuppingOptionIds.indexOf(c.id) !== -1 ? " checked" : "");
+      label.innerHTML =
+        '<input type="checkbox" data-cupping-id="' + c.id + '" ' + (state.selectedCuppingOptionIds.indexOf(c.id) !== -1 ? "checked" : "") + '>' +
+        L.escapeHtml(c.title);
+      cuppingListEl.appendChild(label);
+    });
+    Array.prototype.forEach.call(cuppingListEl.querySelectorAll('input[type=checkbox]'), function(cb){
+      cb.addEventListener("change", function(){
+        var id = cb.getAttribute("data-cupping-id");
+        toggleInArray(state.selectedCuppingOptionIds, id, cb.checked);
+        renderCuppingBox();
+      });
+    });
+  }
 
-    var reservation = {
-      id: "r" + Date.now() + Math.random().toString(16).slice(2),
-      dateISO: pendingSlot.dateISO,
-      startMin: pendingSlot.startMin,
-      endMin: pendingSlot.endMin,
-      name: name,
-      email: email
-    };
-    reservations.push(reservation);
-    var saved = Ledger.saveReservations(reservations);
-    closeModal();
+  function toggleInArray(arr, value, on){
+    var idx = arr.indexOf(value);
+    if (on && idx === -1) arr.push(value);
+    if (!on && idx !== -1) arr.splice(idx, 1);
+  }
+
+  /* ================= STEP 2: 日時選択 ================= */
+  var monthLabel = document.getElementById("monthLabel");
+  var monthGridDow = document.getElementById("monthGridDow");
+  var monthGrid = document.getElementById("monthGrid");
+  var prevMonthBtn = document.getElementById("prevMonthBtn");
+  var nextMonthBtn = document.getElementById("nextMonthBtn");
+  var timeSlotSection = document.getElementById("timeSlotSection");
+  var selectedDateLabel = document.getElementById("selectedDateLabel");
+  var timeGrid = document.getElementById("timeGrid");
+  var noSlotsMsg = document.getElementById("noSlotsMsg");
+
+  var DOW_LABELS = ["日","月","火","水","木","金","土"];
+  monthGridDow.innerHTML = DOW_LABELS.map(function(w){ return '<div class="dow">' + w + '</div>'; }).join("");
+
+  function renderCalendar(){
+    var now = new Date();
+    var range = L.bookableRange(now, CFG);
+    monthLabel.textContent = L.fmtMonthLabel(state.calendarMonth);
+
+    var minMonth = L.startOfMonth(now);
+    var maxMonth = L.startOfMonth(L.isoToDate(range.toISO));
+    prevMonthBtn.disabled = L.isSameMonth(state.calendarMonth, minMonth);
+    nextMonthBtn.disabled = L.isSameMonth(state.calendarMonth, maxMonth);
+
+    var cells = L.buildMonthGrid(state.calendarMonth);
+    var todayISO = L.dateISO(now);
+
+    L.api.getBlockedSlots({ from: range.fromISO, to: range.toISO }).then(function(blocked){
+      state.monthBlockedFullDayISOs = blocked.filter(function(b){ return b.allDay; }).map(function(b){ return b.dateISO; });
+      monthGrid.innerHTML = "";
+      cells.forEach(function(d){
+        var dISO = L.dateISO(d);
+        var cell = document.createElement("div");
+        cell.className = "day-cell";
+        cell.textContent = String(d.getDate());
+        if (!L.isSameMonth(d, state.calendarMonth)){
+          cell.classList.add("other-month");
+        } else {
+          var bookable = L.isBookableDate(dISO, now, CFG);
+          var holiday = state.monthBlockedFullDayISOs.indexOf(dISO) !== -1;
+          if (dISO === todayISO) cell.classList.add("today");
+          if (!bookable || holiday){
+            cell.classList.add("disabled");
+            if (holiday) cell.classList.add("holiday-mark");
+          } else {
+            if (dISO === state.dateISO) cell.classList.add("selected");
+            cell.addEventListener("click", function(){ selectDate(dISO, d); });
+          }
+        }
+        monthGrid.appendChild(cell);
+      });
+    });
+  }
+
+  prevMonthBtn.addEventListener("click", function(){
+    state.calendarMonth = L.addMonths(state.calendarMonth, -1);
     renderCalendar();
-    // If the lookup panel currently shows results for this email, refresh it.
-    if (lookupEmailInput.value.trim() && Ledger.normalizeEmail(lookupEmailInput.value) === Ledger.normalizeEmail(email)){
-      runLookup(email);
-    }
-    showToast(saved ? (name + "様の予約を確定しました") : "予約の保存に失敗しました。ブラウザの設定をご確認ください。");
+  });
+  nextMonthBtn.addEventListener("click", function(){
+    state.calendarMonth = L.addMonths(state.calendarMonth, 1);
+    renderCalendar();
   });
 
-  /* ================= Lookup / cancel (email-gated) ================= */
+  function selectDate(dISO, dayDate){
+    state.dateISO = dISO;
+    state.startMin = null; state.endMin = null;
+    renderCalendar();
+    selectedDateLabel.textContent = L.fmtFullDate(dayDate) + " の空き時間";
+    timeSlotSection.style.display = "block";
+    timeGrid.innerHTML = '<p class="no-slots-msg">読み込み中…</p>';
+    noSlotsMsg.style.display = "none";
+
+    L.api.getAvailability({
+      dateISO: dISO,
+      totalMinutes: totalMinutes(),
+      menuConstraints: { startWindow: currentStartWindow() }
+    }).then(function(starts){
+      timeGrid.innerHTML = "";
+      if (!starts.length){
+        noSlotsMsg.style.display = "block";
+        return;
+      }
+      noSlotsMsg.style.display = "none";
+      starts.forEach(function(startMin){
+        var endMin = startMin + totalMinutes();
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "time-slot-btn";
+        btn.textContent = L.minutesToLabel(startMin);
+        btn.addEventListener("click", function(){
+          state.startMin = startMin;
+          state.endMin = endMin;
+          Array.prototype.forEach.call(timeGrid.querySelectorAll(".time-slot-btn"), function(b){ b.classList.remove("selected"); });
+          btn.classList.add("selected");
+          renderBottomBar();
+        });
+        timeGrid.appendChild(btn);
+      });
+    });
+  }
+
+  /* ================= STEP 3: お客様情報 ================= */
+  var inName = document.getElementById("inName");
+  var inKana = document.getElementById("inKana");
+  var inTel = document.getElementById("inTel");
+  var inEmail = document.getElementById("inEmail");
+  var inNote = document.getElementById("inNote");
+  [inName, inKana, inTel, inEmail, inNote].forEach(function(el){
+    el.addEventListener("input", function(){
+      state.customer.name = inName.value.trim();
+      state.customer.kana = inKana.value.trim();
+      state.customer.tel = inTel.value.trim();
+      state.customer.email = inEmail.value.trim();
+      state.customer.note = inNote.value.trim();
+      renderBottomBar();
+    });
+  });
+
+  var TEL_RE = /^0\d{9,10}$/;
+  var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  function isCustomerValid(showErrors){
+    var okName = state.customer.name.length > 0;
+    var okKana = state.customer.kana.length > 0;
+    var okTel = TEL_RE.test(state.customer.tel);
+    var okEmail = EMAIL_RE.test(state.customer.email);
+    if (showErrors){
+      toggleFieldError("fName", !okName);
+      toggleFieldError("fKana", !okKana);
+      toggleFieldError("fTel", !okTel);
+      toggleFieldError("fEmail", !okEmail);
+    }
+    return okName && okKana && okTel && okEmail;
+  }
+  function toggleFieldError(fieldId, invalid){
+    document.getElementById(fieldId).classList.toggle("invalid", invalid);
+  }
+
+  /* ================= STEP 4: 確認 ================= */
+  var confirmDateTime = document.getElementById("confirmDateTime");
+  var confirmMenus = document.getElementById("confirmMenus");
+  var confirmTotal = document.getElementById("confirmTotal");
+  var confirmCustomer = document.getElementById("confirmCustomer");
+  var agreeCheckbox = document.getElementById("agreeCheckbox");
+  var submitError = document.getElementById("submitError");
+
+  agreeCheckbox.addEventListener("change", renderBottomBar);
+
+  function renderConfirm(){
+    var d = L.isoToDate(state.dateISO);
+    confirmDateTime.innerHTML =
+      '<div class="confirm-row"><span class="k">日付</span><span class="v">' + L.fmtFullDate(d) + '</span></div>' +
+      '<div class="confirm-row"><span class="k">時間</span><span class="v">' + L.minutesToLabel(state.startMin) + '〜' + L.minutesToLabel(state.endMin) + '</span></div>';
+
+    var rows = "";
+    selectedMenus().forEach(function(m){
+      rows += '<div class="confirm-row"><span class="k">' + L.escapeHtml(m.title) + '（' + m.durationMin + '分）</span><span class="v">¥' + m.price.toLocaleString() + '</span></div>';
+    });
+    selectedOptions().forEach(function(o){
+      rows += '<div class="confirm-row"><span class="k">＋' + L.escapeHtml(o.title) + '（' + o.durationMin + '分）</span><span class="v">¥' + o.price.toLocaleString() + '</span></div>';
+    });
+    var cupping = selectedCuppingOptions();
+    if (cupping.length){
+      rows += '<div class="confirm-row"><span class="k">組み合わせ内容（追加料金なし）</span><span class="v">' + cupping.map(function(c){ return L.escapeHtml(c.title); }).join("・") + '</span></div>';
+    }
+    confirmMenus.innerHTML = rows;
+    confirmTotal.textContent = totalMinutes() + "分 / ¥" + totalPrice().toLocaleString();
+
+    confirmCustomer.innerHTML =
+      '<div class="confirm-row"><span class="k">お名前</span><span class="v">' + L.escapeHtml(state.customer.name) + ' 様</span></div>' +
+      '<div class="confirm-row"><span class="k">フリガナ</span><span class="v">' + L.escapeHtml(state.customer.kana) + '</span></div>' +
+      '<div class="confirm-row"><span class="k">電話番号</span><span class="v">' + L.escapeHtml(state.customer.tel) + '</span></div>' +
+      '<div class="confirm-row"><span class="k">メール</span><span class="v">' + L.escapeHtml(state.customer.email) + '</span></div>' +
+      (state.customer.note ? '<div class="confirm-row"><span class="k">ご要望</span><span class="v">' + L.escapeHtml(state.customer.note) + '</span></div>' : "");
+
+    submitError.classList.remove("show");
+    agreeCheckbox.checked = false;
+  }
+
+  /* ================= STEP 5: 完了 ================= */
+  var completeResNo = document.getElementById("completeResNo");
+  var completeSummary = document.getElementById("completeSummary");
+  var lineQrImg = document.getElementById("lineQrImg");
+  var lineQrLink = document.getElementById("lineQrLink");
+  var lineBtnLink = document.getElementById("lineBtnLink");
+
+  lineQrImg.src = L.LINE_QR_SRC;
+  lineQrLink.href = CFG.LINE_URL;
+  lineBtnLink.href = CFG.LINE_URL;
+
+  function renderComplete(reservation){
+    completeResNo.textContent = reservation.id;
+    var d = L.isoToDate(reservation.dateISO);
+    var menuTitles = selectedMenus().map(function(m){ return m.title + "（" + m.durationMin + "分）"; }).join("、");
+    var optTitles = selectedOptions().map(function(o){ return o.title; }).join("、");
+    var cuppingTitles = selectedCuppingOptions().map(function(c){ return c.title; }).join("・");
+    completeSummary.innerHTML =
+      '<div class="confirm-row"><span class="k">日時</span><span class="v">' + L.fmtFullDate(d) + " " + L.minutesToLabel(reservation.startMin) + '〜' + L.minutesToLabel(reservation.endMin) + '</span></div>' +
+      '<div class="confirm-row"><span class="k">メニュー</span><span class="v">' + L.escapeHtml(menuTitles) + '</span></div>' +
+      (optTitles ? '<div class="confirm-row"><span class="k">オプション</span><span class="v">' + L.escapeHtml(optTitles) + '</span></div>' : "") +
+      (cuppingTitles ? '<div class="confirm-row"><span class="k">組み合わせ内容</span><span class="v">' + L.escapeHtml(cuppingTitles) + '</span></div>' : "") +
+      '<div class="confirm-total"><span class="label">合計</span><span class="amount">¥' + reservation.totalPrice.toLocaleString() + '</span></div>';
+  }
+
+  /* ================= Navigation ================= */
+  backBtn.addEventListener("click", function(){
+    if (state.step > 1) showStep(state.step - 1);
+  });
+
+  nextBtn.addEventListener("click", function(){
+    if (state.step === 3){
+      if (!isCustomerValid(true)) return;
+    }
+    if (state.step === 4){
+      submitConfirm();
+      return;
+    }
+    if (isStepValid(state.step)){
+      showStep(state.step + 1);
+    }
+  });
+
+  function submitConfirm(){
+    if (!agreeCheckbox.checked) return;
+    nextBtn.disabled = true;
+    nextBtn.textContent = "送信中…";
+
+    var payload = {
+      dateISO: state.dateISO,
+      startMin: state.startMin,
+      endMin: state.endMin,
+      totalMinutes: totalMinutes(),
+      totalPrice: totalPrice(),
+      menuIds: state.selectedMenuIds.slice(),
+      optionIds: state.selectedOptionIds.slice(),
+      cuppingOptionIds: state.selectedCuppingOptionIds.slice(),
+      customer: {
+        name: state.customer.name,
+        kana: state.customer.kana,
+        tel: state.customer.tel,
+        email: state.customer.email,
+        note: state.customer.note
+      }
+    };
+
+    L.api.createReservation(payload).then(function(res){
+      if (!res.ok){
+        submitError.textContent = res.error || "予約の確定に失敗しました。";
+        submitError.classList.add("show");
+        renderBottomBar();
+        return;
+      }
+      state.lastReservation = res.reservation;
+      renderComplete(res.reservation);
+      showStep(5);
+    }).catch(function(){
+      submitError.textContent = "通信エラーが発生しました。もう一度お試しください。";
+      submitError.classList.add("show");
+      renderBottomBar();
+    });
+  }
+
+  document.getElementById("newReservationLink").addEventListener("click", function(e){
+    e.preventDefault();
+    state.selectedMenuIds = [];
+    state.selectedOptionIds = [];
+    state.selectedCuppingOptionIds = [];
+    state.dateISO = null; state.startMin = null; state.endMin = null;
+    state.customer = { name:"", kana:"", tel:"", email:"", note:"" };
+    inName.value = ""; inKana.value = ""; inTel.value = ""; inEmail.value = ""; inNote.value = "";
+    renderMenuList(); renderOptionList(); renderCuppingBox();
+    showStep(1);
+  });
+  document.getElementById("logoLink").addEventListener("click", function(e){ e.preventDefault(); });
+
+  /* ================= 予約の確認・変更パネル ================= */
+  var lookupPanel = document.getElementById("lookupPanel");
   var lookupForm = document.getElementById("lookupForm");
-  var lookupEmailInput = document.getElementById("lookupEmail");
-  var lookupField = document.getElementById("lookupField");
-  var lookupResultsEl = document.getElementById("lookupResults");
-  var lookupCount = document.getElementById("lookupCount");
+  var lookupResNo = document.getElementById("lookupResNo");
+  var lookupTel = document.getElementById("lookupTel");
+  var lookupResult = document.getElementById("lookupResult");
+
+  document.getElementById("openLookupBtn").addEventListener("click", function(e){
+    e.preventDefault();
+    document.getElementById("wizardWrap").style.display = "none";
+    bottomBar.style.display = "none";
+    document.body.style.paddingBottom = "24px";
+    lookupPanel.classList.add("active");
+  });
+  document.getElementById("closeLookupBtn").addEventListener("click", function(e){
+    e.preventDefault();
+    lookupPanel.classList.remove("active");
+    document.getElementById("wizardWrap").style.display = "block";
+    renderBottomBar();
+  });
 
   lookupForm.addEventListener("submit", function(e){
     e.preventDefault();
-    var email = lookupEmailInput.value.trim();
-    var emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    if (!emailOk){
-      lookupField.classList.add("invalid");
-      lookupResultsEl.innerHTML = "";
-      lookupCount.textContent = "";
-      return;
-    }
-    lookupField.classList.remove("invalid");
-    runLookup(email);
+    var resNo = lookupResNo.value.trim();
+    var tel = lookupTel.value.trim();
+    lookupResult.className = "lookup-result";
+    lookupResult.style.display = "block";
+    lookupResult.innerHTML = '<p class="msg">確認中…</p>';
+
+    L.api.getReservations({}).then(function(all){
+      var found = all.filter(function(r){
+        return r.id === resNo && r.customer && r.customer.tel === tel;
+      })[0];
+      if (!found){
+        lookupResult.classList.add("error");
+        lookupResult.innerHTML = '<p class="msg">予約番号または電話番号が一致する予約が見つかりませんでした。入力内容をご確認ください。</p>';
+        return;
+      }
+      renderLookupResult(found);
+    });
   });
 
-  function runLookup(email){
-    var target = Ledger.normalizeEmail(email);
-    var matches = reservations.filter(function(r){ return Ledger.normalizeEmail(r.email) === target; })
-      .sort(function(a,b){
-        if (a.dateISO !== b.dateISO) return a.dateISO < b.dateISO ? -1 : 1;
-        return a.startMin - b.startMin;
-      });
+  function renderLookupResult(reservation){
+    var d = L.isoToDate(reservation.dateISO);
+    lookupResult.innerHTML =
+      '<div class="confirm-row"><span class="k">予約番号</span><span class="v">' + L.escapeHtml(reservation.id) + '</span></div>' +
+      '<div class="confirm-row"><span class="k">日時</span><span class="v">' + L.fmtFullDate(d) + " " + L.minutesToLabel(reservation.startMin) + '〜' + L.minutesToLabel(reservation.endMin) + '</span></div>' +
+      '<div class="confirm-row"><span class="k">お名前</span><span class="v">' + L.escapeHtml(reservation.customer.name) + ' 様</span></div>' +
+      '<div class="field" style="margin-top:14px;">' +
+        '<label for="editTel">電話番号</label>' +
+        '<input type="tel" id="editTel" value="' + L.escapeHtml(reservation.customer.tel) + '" inputmode="numeric">' +
+      '</div>' +
+      '<div class="field">' +
+        '<label for="editEmail">メールアドレス</label>' +
+        '<input type="email" id="editEmail" value="' + L.escapeHtml(reservation.customer.email) + '">' +
+      '</div>' +
+      '<button type="button" class="btn btn-primary" id="saveContactBtn" style="width:100%;">連絡先を保存する</button>' +
+      '<p class="save-msg" id="saveMsg">連絡先を更新しました。</p>';
 
-    lookupCount.textContent = matches.length ? "(" + matches.length + "件)" : "";
-    lookupResultsEl.innerHTML = "";
-
-    if (!matches.length){
-      var empty = document.createElement("li");
-      empty.innerHTML = '<div class="empty-state">該当する予約が見つかりませんでした。<br>入力したメールアドレスをご確認ください。</div>';
-      lookupResultsEl.appendChild(empty);
-      return;
-    }
-
-    matches.forEach(function(r){
-      var li = document.createElement("li");
-      li.className = "reservation-card";
-
-      li.innerHTML =
-        '<div class="row-top">' +
-          '<div class="stamp">確定</div>' +
-          '<div class="info">' +
-            '<div class="dt">' + Ledger.fmtCardDate(r.dateISO) + " " + Ledger.minutesToLabel(r.startMin) + "〜" + Ledger.minutesToLabel(r.endMin) + '</div>' +
-            '<div class="name">' + Ledger.escapeHtml(r.name) + ' 様</div>' +
-            '<div class="mail">' + Ledger.escapeHtml(r.email) + '</div>' +
-          '</div>' +
-        '</div>' +
-        '<button class="cancel-btn" data-id="' + r.id + '">キャンセル</button>';
-
-      lookupResultsEl.appendChild(li);
-    });
-
-    Array.prototype.slice.call(lookupResultsEl.querySelectorAll(".cancel-btn")).forEach(function(btn){
-      btn.addEventListener("click", function(){
-        var id = btn.getAttribute("data-id");
-        reservations = reservations.filter(function(r){ return r.id !== id; });
-        var saved = Ledger.saveReservations(reservations);
-        renderCalendar();
-        runLookup(email);
-        showToast(saved ? "予約を取り消しました" : "取り消しの保存に失敗しました。ブラウザの設定をご確認ください。");
+    document.getElementById("saveContactBtn").addEventListener("click", function(){
+      var newTel = document.getElementById("editTel").value.trim();
+      var newEmail = document.getElementById("editEmail").value.trim();
+      if (!TEL_RE.test(newTel) || !EMAIL_RE.test(newEmail)){
+        showToast("電話番号・メールアドレスの形式をご確認ください");
+        return;
+      }
+      L.api.updateReservationContact(reservation.id, { tel:newTel, email:newEmail }).then(function(res){
+        if (res.ok){
+          document.getElementById("saveMsg").classList.add("show");
+          showToast("連絡先を更新しました");
+        } else {
+          showToast(res.error || "更新に失敗しました");
+        }
       });
     });
   }
 
   /* ================= Toast ================= */
   var toast = document.getElementById("toast");
-  var toastText = document.getElementById("toastText");
   var toastTimer = null;
   function showToast(msg){
-    toastText.textContent = msg;
+    toast.textContent = msg;
     toast.classList.add("show");
     if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(function(){ toast.classList.remove("show"); }, 2600);
+    toastTimer = setTimeout(function(){ toast.classList.remove("show"); }, 3000);
   }
 
   /* ================= Init ================= */
-  document.getElementById("todayNote").textContent = Ledger.fmtFullDate(new Date());
-  if (!Ledger.isStorageAvailable()){
-    document.getElementById("storageWarning").classList.add("show");
+  if (!L.isStorageAvailable()){
+    showToast("このブラウザでは保存機能が利用できません。予約内容が保存されない場合があります。");
   }
-  renderCalendar();
+  renderMenuList();
+  renderOptionList();
+  renderCuppingBox();
+  showStep(1);
 
 })();
 </script>
