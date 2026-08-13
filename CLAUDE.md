@@ -52,6 +52,7 @@
 │   ├── blog-katakori-stretch.html
 │   ├── blog-line-yoyaku.html
 │   └── README.md
+├── reserve-schedule/               # 予約システム（開発中）。詳細は reserve-schedule/README.md を参照
 └── CLAUDE.md
 ```
 
@@ -63,7 +64,7 @@
 - 公開ベースURL: `https://cocosia.relaxation-salon.workers.dev/`（canonical / OGP / 構造化データで使用）
 - ホスティング: **Cloudflare Workers**
 - 公開URL: https://cocosia.relaxation-salon.workers.dev/
-- 開発ブランチ: `claude/salon-integration-setup-8azhxf`
+- 開発ブランチ: `claude/salon-booking-system-qoszvb`
 - 変更後は必ずコミットし、指定ブランチへ push する。他ブランチへ push しない。
 
 ## 5. 集客導線の設定値

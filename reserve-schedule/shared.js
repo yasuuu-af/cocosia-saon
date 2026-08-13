@@ -68,11 +68,12 @@ window.Ledger = (function(){
       desc: "12時〜20時限定。背中や皮膚のザラつきをしっかりケア。保湿まで丁寧に。",
       durationMin: 120,
       price: 13900,
-      /* 施術時間帯の制約（終了ベース）: 施術の開始〜終了が 12:00〜20:00 の範囲に
-         収まる開始時刻のみ選択可（120分メニューのため実質 12:00〜18:00開始）。
-         オーナー確認待ち。代替解釈（開始が20:00までであればよい）については
-         README.md (D)-4 を参照。 */
-      serviceWindow: { min: 12 * 60, max: 20 * 60 }
+      /* 開始時刻の制約（開始ベース、2026-08-13 オーナー確認済み）:
+         「20時までに開始すればよい」という運用のため、開始時刻が
+         12:00〜20:00の範囲内であれば選択可能。終了時刻が20:00を超えて
+         よい（営業終了24:00の通常制約のみ適用）。120分メニューなら
+         12:00〜20:00開始の17枠が選択可能。 */
+      startWindow: { min: 12 * 60, max: 20 * 60 }
     },
     {
       id: "exosome60",
@@ -302,17 +303,17 @@ window.Ledger = (function(){
     (selectedOptions||[]).forEach(function(o){ total += o.price; });
     return total;
   }
-  /* 選択中メニューが持つ施術時間帯制約（serviceWindow、終了ベース）の積集合を返す（無ければ null）。
-     意味論: 施術の開始〜終了（開始時刻 〜 開始時刻+合計時間）が min〜max に収まらなければならない。
-     複数メニューにそれぞれ制約がある場合は、両方を同時に満たす範囲（積集合）を返す。 */
-  function combineServiceWindows(selectedMenus){
+  /* 選択中メニューが持つ開始時刻制約（startWindow、開始ベース）の積集合を返す（無ければ null）。
+     意味論: 施術の「開始時刻」が min〜max に収まらなければならない（終了時刻は問わない）。
+     複数メニューにそれぞれ制約がある場合は、両方を同時に満たす開始時刻の範囲（積集合）を返す。 */
+  function combineStartWindows(selectedMenus){
     var win = null;
     (selectedMenus||[]).forEach(function(m){
-      if (!m.serviceWindow) return;
-      if (!win){ win = { min: m.serviceWindow.min, max: m.serviceWindow.max }; }
+      if (!m.startWindow) return;
+      if (!win){ win = { min: m.startWindow.min, max: m.startWindow.max }; }
       else {
-        win.min = Math.max(win.min, m.serviceWindow.min);
-        win.max = Math.min(win.max, m.serviceWindow.max);
+        win.min = Math.max(win.min, m.startWindow.min);
+        win.max = Math.min(win.max, m.startWindow.max);
       }
     });
     return win;
@@ -337,7 +338,8 @@ window.Ledger = (function(){
        dateISO, totalMinutes, now,
        reservations: [{dateISO,startMin,endMin}, ...]  (その日のみで良い),
        blockedSlots: [{dateISO,allDay,startMin,endMin,source}, ...] (その日のみで良い),
-       serviceWindow: {min,max} | null … 施術の開始〜終了がこの範囲に収まる開始時刻のみ許可（終了ベース）,
+       startWindow: {min,max} | null … 施術の「開始時刻」がこの範囲に収まる開始時刻のみ許可
+         （開始ベース。終了時刻は問わない。営業終了24:00を超えない制約は下のループ条件で別途適用）,
        cfg: { BUSINESS_START, BUSINESS_END, STEP, CUTOFF_MIN, MAX_ADVANCE_DAYS } (省略時はBOOKING_CONFIG)
      }
   */
@@ -357,8 +359,8 @@ window.Ledger = (function(){
     for (var start = cfg.BUSINESS_START; start + opts.totalMinutes <= cfg.BUSINESS_END; start += cfg.STEP){
       var end = start + opts.totalMinutes;
 
-      if (opts.serviceWindow){
-        if (start < opts.serviceWindow.min || end > opts.serviceWindow.max) continue;
+      if (opts.startWindow){
+        if (start < opts.startWindow.min || start > opts.startWindow.max) continue;
       }
 
       var slotStartDate = new Date(dayDate.getTime());
@@ -514,7 +516,7 @@ window.Ledger = (function(){
     },
 
     /* その日の予約可能な開始時刻(分)の一覧を返す
-       opts: { dateISO, totalMinutes, menuConstraints:{serviceWindow} } */
+       opts: { dateISO, totalMinutes, menuConstraints:{startWindow} } */
     getAvailability: function(opts){
       return Promise.resolve().then(function(){
         var cfg = getEffectiveConfig();
@@ -526,7 +528,7 @@ window.Ledger = (function(){
           now: new Date(),
           reservations: reservations,
           blockedSlots: blockedSlots,
-          serviceWindow: opts.menuConstraints && opts.menuConstraints.serviceWindow,
+          startWindow: opts.menuConstraints && opts.menuConstraints.startWindow,
           cfg: cfg
         });
       });
@@ -586,7 +588,7 @@ window.Ledger = (function(){
     overlaps: overlaps,
     computeTotalMinutes: computeTotalMinutes,
     computeTotalPrice: computeTotalPrice,
-    combineServiceWindows: combineServiceWindows,
+    combineStartWindows: combineStartWindows,
     bookableRange: bookableRange,
     isBookableDate: isBookableDate,
     computeAvailableStartTimes: computeAvailableStartTimes,

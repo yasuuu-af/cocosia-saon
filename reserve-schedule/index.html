@@ -782,7 +782,7 @@
   }
   function totalMinutes(){ return L.computeTotalMinutes(selectedMenus(), selectedOptions()); }
   function totalPrice(){ return L.computeTotalPrice(selectedMenus(), selectedOptions()); }
-  function currentServiceWindow(){ return L.combineServiceWindows(selectedMenus()); }
+  function currentStartWindow(){ return L.combineStartWindows(selectedMenus()); }
 
   /* ================= Step indicator / bottom bar ================= */
   var stepIndicator = document.getElementById("stepIndicator");
@@ -1000,7 +1000,7 @@
     L.api.getAvailability({
       dateISO: dISO,
       totalMinutes: totalMinutes(),
-      menuConstraints: { serviceWindow: currentServiceWindow() }
+      menuConstraints: { startWindow: currentStartWindow() }
     }).then(function(starts){
       timeGrid.innerHTML = "";
       if (!starts.length){
