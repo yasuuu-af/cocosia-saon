@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>予約受付台帳</title>
+<style>
+  :root{
+    --paper: #F1ECDF;
+    --paper-deep: #E8E1CC;
+    --paper-shadow: #DCD3B8;
+    --ink: #262420;
+    --ink-soft: #6B6455;
+    --ink-faint: #A69C87;
+    --rule: #CBC0A2;
+    --rule-strong: #B7A97F;
+    --teal: #1F6F63;
+    --teal-deep: #164F46;
+    --teal-tint: #DDEAE5;
+    --stamp: #B3382A;
+    --stamp-deep: #8C2A20;
+    --stamp-tint: #F3DDD7;
+    --busy-a: #DDDDD8;
+    --busy-b: #CCCCC5;
+    --busy-text: #6B6B64;
+    --available-bg: #DDEAE5;
+    --available-bg-hover: #C7DFD6;
+    --focus: #1F6F63;
+    --font-display: "Hiragino Mincho ProN","游明朝","Yu Mincho",serif;
+    --font-body: "Hiragino Kaku Gothic ProN","游ゴシック体","Yu Gothic","Hiragino Sans",sans-serif;
+    --font-mono: "SF Mono","Consolas","Menlo",monospace;
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    background:
+      linear-gradient(180deg, rgba(0,0,0,0.03), rgba(0,0,0,0) 120px),
+      var(--paper-shadow);
+    color:var(--ink);
+    font-family:var(--font-body);
+    line-height:1.6;
+    padding:32px 20px 64px;
+  }
+
+  a{ color:var(--teal-deep); }
+
+  :focus-visible{
+    outline:2px solid var(--focus);
+    outline-offset:2px;
+  }
+
+  .ledger{
+    max-width:1180px;
+    margin:0 auto;
+    background:var(--paper);
+    border:1px solid var(--rule);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.5) inset, 0 18px 40px -20px rgba(38,36,32,0.45);
+    border-radius:2px;
+  }
+
+  /* ---------- Header ---------- */
+  .ledger-header{
+    padding:30px 36px 22px;
+    border-bottom:1px solid var(--rule);
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  .ledger-header .title-block{ display:flex; align-items:baseline; gap:14px; }
+  .ledger-header h1{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:26px;
+    letter-spacing:.06em;
+    margin:0;
+  }
+  .ledger-header .subtitle{
+    font-size:12px;
+    color:var(--ink-soft);
+    letter-spacing:.12em;
+  }
+  .ledger-header .header-right{ display:flex; align-items:center; gap:14px; }
+  .ledger-header .today-note{
+    font-family:var(--font-mono);
+    font-size:12px;
+    color:var(--ink-faint);
+  }
+  .admin-link{
+    font-family:var(--font-body);
+    font-size:11.5px;
+    letter-spacing:.03em;
+    color:var(--ink-soft);
+    border:1px solid var(--rule-strong);
+    border-radius:20px;
+    padding:5px 12px;
+    text-decoration:none;
+    white-space:nowrap;
+  }
+  .admin-link:hover{ background:var(--paper-deep); color:var(--ink); }
+
+  .storage-warning{
+    display:none;
+    margin:0 36px;
+    margin-top:18px;
+    padding:10px 14px;
+    border:1px solid var(--stamp);
+    background:var(--stamp-tint);
+    color:var(--stamp-deep);
+    font-size:12px;
+    border-radius:3px;
+  }
+  .storage-warning.show{ display:block; }
+
+  /* ---------- Sections ---------- */
+  section{ padding:22px 36px; border-bottom:1px solid var(--rule); }
+  section:last-of-type{ border-bottom:none; }
+
+  h2.section-title{
+    font-family:var(--font-display);
+    font-size:15px;
+    font-weight:700;
+    letter-spacing:.08em;
+    margin:0 0 4px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  h2.section-title .num{
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--ink-faint);
+    border:1px solid var(--rule-strong);
+    border-radius:2px;
+    padding:1px 5px;
+  }
+  .section-desc{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin:0 0 16px;
+  }
+
+  /* ---------- Toolbar ---------- */
+  .toolbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+    padding-bottom:0;
+  }
+  .week-nav{ display:flex; align-items:center; gap:10px; }
+  .week-nav button{
+    width:30px; height:30px;
+    border:1px solid var(--rule-strong);
+    background:var(--paper);
+    border-radius:3px;
+    cursor:pointer;
+    font-size:14px;
+    color:var(--ink);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .week-nav button:hover{ background:var(--paper-deep); }
+  .week-nav .range{
+    font-family:var(--font-mono);
+    font-size:13.5px;
+    min-width:170px;
+    text-align:center;
+  }
+  .week-nav .today-btn{
+    width:auto; padding:0 10px; font-size:12px; font-family:var(--font-body);
+  }
+  .legend{ display:flex; gap:14px; font-size:11.5px; color:var(--ink-soft); flex-wrap:wrap; }
+  .legend .swatch{ display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:5px; vertical-align:-1px; }
+  .sw-available{ background:var(--teal-tint); border:1px solid var(--teal); }
+  .sw-busy{ background:repeating-linear-gradient(45deg, var(--busy-a), var(--busy-a) 3px, var(--busy-b) 3px, var(--busy-b) 6px); border:1px solid var(--rule-strong); }
+  .sw-reserved{ background:var(--stamp-tint); border:1px solid var(--stamp); }
+
+  /* ---------- Board (two-page layout) ---------- */
+  .board{
+    display:grid;
+    grid-template-columns: 1fr 28px 320px;
+    gap:0;
+    padding:0;
+    border-bottom:none;
+  }
+  .calendar-page{ padding:22px 24px 30px 36px; overflow-x:auto; }
+  .spine{
+    background:
+      linear-gradient(90deg, transparent 0, transparent 12px, var(--rule-strong) 12px, var(--rule-strong) 13px, transparent 13px),
+      repeating-linear-gradient(180deg, transparent 0 8px, rgba(38,36,32,0.05) 8px 9px);
+    box-shadow: inset 6px 0 10px -8px rgba(38,36,32,0.5), inset -6px 0 10px -8px rgba(38,36,32,0.5);
+  }
+  .list-page{
+    padding:22px 36px 30px 24px;
+    background:rgba(255,255,255,0.18);
+  }
+
+  /* ---------- Calendar grid ---------- */
+  table.calendar-grid{
+    border-collapse:collapse;
+    width:100%;
+    min-width:560px;
+    table-layout:fixed;
+  }
+  .calendar-grid th, .calendar-grid td{
+    border:1px solid var(--rule);
+    padding:0;
+  }
+  .calendar-grid col.time-col{ width:64px; }
+  .calendar-grid thead th{
+    font-family:var(--font-body);
+    font-weight:700;
+    font-size:12.5px;
+    padding:8px 4px;
+    background:var(--paper-deep);
+    text-align:center;
+  }
+  .calendar-grid thead th .dow{ display:block; letter-spacing:.05em; }
+  .calendar-grid thead th .ddate{ display:block; font-family:var(--font-mono); font-weight:400; font-size:11px; color:var(--ink-soft); margin-top:1px;}
+  .calendar-grid thead th.time-col{ background:transparent; border:none; }
+
+  .calendar-grid td.time-label{
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--ink-soft);
+    text-align:right;
+    padding:0 8px;
+    background:transparent;
+    border-left:none;
+    white-space:nowrap;
+    vertical-align:top;
+  }
+  .calendar-grid tr.hour-start td.time-label{ color:var(--ink); font-weight:600; }
+  .calendar-grid tr.hour-start td{ border-top:1px solid var(--rule-strong); }
+
+  .slot{
+    height:26px;
+    cursor:pointer;
+    position:relative;
+    transition:background .1s ease;
+  }
+  .slot.available{ background:var(--available-bg); }
+  .slot.available:hover{ background:var(--available-bg-hover); }
+  .slot.available:focus-visible{ background:var(--available-bg-hover); }
+  .slot.busy{
+    cursor:not-allowed;
+    background:repeating-linear-gradient(45deg, var(--busy-a), var(--busy-a) 3px, var(--busy-b) 3px, var(--busy-b) 6px);
+  }
+  .slot .busy-label{
+    position:absolute;
+    inset:2px 3px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:9px;
+    letter-spacing:.03em;
+    color:var(--busy-text);
+    font-weight:600;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .slot.past{
+    cursor:not-allowed;
+    background:repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(38,36,32,0.03) 5px, rgba(38,36,32,0.03) 10px);
+    color:var(--ink-faint);
+  }
+  .slot.reserved{
+    cursor:default;
+    background:var(--stamp-tint);
+  }
+  .slot .stamp-mini{
+    position:absolute;
+    inset:2px 3px;
+    border:1px solid var(--stamp);
+    color:var(--stamp-deep);
+    border-radius:2px;
+    font-size:9px;
+    font-family:var(--font-display);
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    letter-spacing:.05em;
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+    padding:0 2px;
+    transform:rotate(-3deg);
+  }
+
+  /* ---------- Lookup / cancel form ---------- */
+  .lookup-form{ margin-bottom:18px; }
+  .lookup-form .field{ margin-bottom:10px; }
+  .lookup-form label{ display:block; font-size:12px; color:var(--ink-soft); margin-bottom:4px; }
+  .lookup-form input{
+    width:100%;
+    padding:9px 10px;
+    border:1px solid var(--rule-strong);
+    border-radius:3px;
+    font-size:14px;
+    font-family:var(--font-body);
+    background:#fff;
+    color:var(--ink);
+  }
+  .lookup-form input:focus{ border-color:var(--teal); }
+  .btn-block{ width:100%; }
+  .lookup-hint{ font-size:11px; color:var(--ink-faint); margin-top:4px; }
+
+  /* ---------- Reservation list ---------- */
+  .reservation-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; }
+  .reservation-card{
+    border:1px solid var(--rule-strong);
+    background:var(--paper);
+    border-radius:3px;
+    padding:12px 14px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .reservation-card .row-top{
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+  }
+  .reservation-card .stamp{
+    flex:0 0 auto;
+    width:42px; height:42px;
+    border:2px solid var(--stamp);
+    color:var(--stamp-deep);
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:12px;
+    transform:rotate(-8deg);
+    letter-spacing:.02em;
+  }
+  .reservation-card .info{ flex:1; min-width:0; }
+  .reservation-card .dt{
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--ink);
+  }
+  .reservation-card .name{ font-size:13.5px; margin-top:2px; }
+  .reservation-card .mail{ font-size:11.5px; color:var(--ink-soft); word-break:break-all; margin-top:1px; }
+  .reservation-card .cancel-btn{
+    align-self:flex-end;
+    background:none;
+    border:1px solid var(--rule-strong);
+    border-radius:3px;
+    color:var(--ink-soft);
+    font-size:11px;
+    cursor:pointer;
+    padding:4px 10px;
+  }
+  .reservation-card .cancel-btn:hover{ color:var(--stamp); }
+
+  .empty-state{
+    text-align:center;
+    padding:28px 12px;
+    color:var(--ink-faint);
+    font-size:12.5px;
+    border:1px dashed var(--rule-strong);
+    border-radius:4px;
+  }
+  .list-count{ font-family:var(--font-mono); font-size:11px; color:var(--ink-faint); margin-left:4px; }
+
+  /* ---------- Modal ---------- */
+  .modal-overlay{
+    position:fixed; inset:0;
+    background:rgba(38,36,32,0.45);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:50;
+  }
+  .modal-overlay.open{ display:flex; }
+  .modal{
+    background:var(--paper);
+    border:1px solid var(--rule-strong);
+    border-radius:4px;
+    max-width:380px;
+    width:100%;
+    padding:26px 26px 22px;
+    box-shadow:0 24px 48px -12px rgba(0,0,0,0.4);
+  }
+  .modal h3{
+    font-family:var(--font-display);
+    font-size:17px;
+    margin:0 0 4px;
+  }
+  .modal .modal-slot{
+    font-family:var(--font-mono);
+    font-size:13px;
+    color:var(--teal-deep);
+    background:var(--teal-tint);
+    display:inline-block;
+    padding:4px 8px;
+    border-radius:3px;
+    margin-bottom:16px;
+  }
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:12px; color:var(--ink-soft); margin-bottom:4px; }
+  .field input{
+    width:100%;
+    padding:9px 10px;
+    border:1px solid var(--rule-strong);
+    border-radius:3px;
+    font-size:14px;
+    font-family:var(--font-body);
+    background:#fff;
+    color:var(--ink);
+  }
+  .field input:focus{ border-color:var(--teal); }
+  .field .err{ color:var(--stamp-deep); font-size:11.5px; margin-top:4px; display:none; }
+  .field.invalid .err{ display:block; }
+  .field.invalid input{ border-color:var(--stamp); }
+
+  .modal-actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:18px; }
+  .btn{
+    padding:9px 18px;
+    border-radius:3px;
+    font-size:13px;
+    cursor:pointer;
+    border:1px solid transparent;
+  }
+  .btn-primary{ background:var(--teal); color:#fff; border-color:var(--teal-deep); }
+  .btn-primary:hover{ background:var(--teal-deep); }
+  .btn-secondary{ background:none; border-color:var(--rule-strong); color:var(--ink-soft); }
+  .btn-secondary:hover{ color:var(--ink); }
+
+  /* ---------- Toast ---------- */
+  .toast{
+    position:fixed;
+    bottom:26px; left:50%;
+    transform:translateX(-50%) translateY(10px) scale(.96);
+    background:var(--ink);
+    color:var(--paper);
+    padding:12px 20px;
+    border-radius:4px;
+    font-size:13px;
+    display:flex; align-items:center; gap:10px;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .18s ease, transform .18s ease;
+    z-index:60;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0) scale(1); }
+  .toast .stamp-tag{
+    border:1.5px solid var(--stamp);
+    color:#e8b3a8;
+    border-radius:3px;
+    padding:1px 6px;
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:11px;
+    transform:rotate(-6deg);
+  }
+
+  @media (max-width: 880px){
+    .board{ grid-template-columns:1fr; }
+    .spine{ display:none; }
+    .list-page{ border-top:1px solid var(--rule); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ transition:none !important; animation:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="ledger">
+
+  <header class="ledger-header">
+    <div class="title-block">
+      <h1>予約受付台帳</h1>
+      <span class="subtitle">RESERVATION LEDGER</span>
+    </div>
+    <div class="header-right">
+      <span class="today-note" id="todayNote"></span>
+      <a class="admin-link" href="admin.html">管理者ページ ▸</a>
+    </div>
+  </header>
+
+  <div class="storage-warning" id="storageWarning">
+    このブラウザでは保存機能（localStorage）が利用できないため、予約内容はページを再読み込みすると消えてしまいます。プライベートブラウジングモードなどをご利用の場合は、通常モードでお試しください。
+  </div>
+
+  <section style="padding-bottom:0;">
+    <h2 class="section-title"><span class="num">01</span> 週間カレンダー</h2>
+    <p class="section-desc">空いている時間帯（緑色）をクリックすると、その場で予約を確定できます。</p>
+    <div class="toolbar">
+      <div class="week-nav">
+        <button id="prevWeekBtn" aria-label="前の週">‹</button>
+        <span class="range" id="weekRange"></span>
+        <button id="nextWeekBtn" aria-label="次の週">›</button>
+        <button class="today-btn" id="todayBtn">今週</button>
+      </div>
+      <div class="legend">
+        <span><i class="swatch sw-available"></i>空き</span>
+        <span><i class="swatch sw-busy"></i>予定あり</span>
+        <span><i class="swatch sw-reserved"></i>予約済</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="board">
+    <div class="calendar-page">
+      <table class="calendar-grid" id="calendarGrid">
+        <colgroup>
+          <col class="time-col">
+          <col><col><col><col><col>
+        </colgroup>
+        <thead id="calendarHead"></thead>
+        <tbody id="calendarBody"></tbody>
+      </table>
+    </div>
+    <div class="spine"></div>
+    <div class="list-page">
+      <h2 class="section-title"><span class="num">02</span> 予約の確認・キャンセル</h2>
+      <p class="section-desc">予約時に入力したメールアドレスを入力すると、ご本人の予約を確認・キャンセルできます。</p>
+
+      <form id="lookupForm" class="lookup-form">
+        <div class="field" id="lookupField">
+          <label for="lookupEmail">メールアドレス</label>
+          <input type="email" id="lookupEmail" autocomplete="email" placeholder="taro@example.com">
+          <div class="err">正しいメールアドレスを入力してください。</div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">予約を確認する</button>
+      </form>
+
+      <span class="list-count" id="lookupCount"></span>
+      <ul class="reservation-list" id="lookupResults"></ul>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h3 id="modalTitle">予約内容の確認</h3>
+    <span class="modal-slot" id="modalSlotText"></span>
+    <form id="reservationForm">
+      <div class="field" id="nameField">
+        <label for="nameInput">氏名</label>
+        <input type="text" id="nameInput" autocomplete="name" placeholder="山田 太郎">
+        <div class="err">氏名を入力してください。</div>
+      </div>
+      <div class="field" id="emailField">
+        <label for="emailInput">メールアドレス</label>
+        <input type="email" id="emailInput" autocomplete="email" placeholder="taro@example.com">
+        <div class="err">正しいメールアドレスを入力してください。</div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="modalCancelBtn">キャンセル</button>
+        <button type="submit" class="btn btn-primary">予約を確定する</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span class="stamp-tag">確定</span><span id="toastText"></span></div>
+
+<script src="shared.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* ================= Constants ================= */
+  var DOW_LABELS = ["月","火","水","木","金"];
+  var BUSINESS_START = 9 * 60;   // 09:00 in minutes
+  var BUSINESS_END   = 18 * 60;  // 18:00 in minutes
+  var STEP = 30;                 // minutes
+
+  /* ================= State ================= */
+  var icsEvents = Ledger.loadIcsEvents();       // read-only here; managed on the admin page
+  var reservations = Ledger.loadReservations(); // [{id,dateISO,startMin,endMin,name,email}]
+  var currentWeekStart = Ledger.mondayOf(new Date());
+  var pendingSlot = null; // {dateISO, startMin, endMin}
+
+  /* ================= Calendar rendering ================= */
+  var calendarHead = document.getElementById("calendarHead");
+  var calendarBody = document.getElementById("calendarBody");
+  var weekRange = document.getElementById("weekRange");
+  var prevWeekBtn = document.getElementById("prevWeekBtn");
+  var nextWeekBtn = document.getElementById("nextWeekBtn");
+  var todayBtn = document.getElementById("todayBtn");
+
+  prevWeekBtn.addEventListener("click", function(){ currentWeekStart = Ledger.addDays(currentWeekStart, -7); renderCalendar(); });
+  nextWeekBtn.addEventListener("click", function(){ currentWeekStart = Ledger.addDays(currentWeekStart, 7); renderCalendar(); });
+  todayBtn.addEventListener("click", function(){ currentWeekStart = Ledger.mondayOf(new Date()); renderCalendar(); });
+
+  function renderCalendar(){
+    var days = [];
+    for (var i=0;i<5;i++){ days.push(Ledger.addDays(currentWeekStart, i)); }
+
+    weekRange.textContent = Ledger.fmtMonthDate(days[0]) + " 〜 " + Ledger.fmtMonthDate(days[4]) + "  (" + days[0].getFullYear() + ")";
+
+    // Head
+    var headRow = document.createElement("tr");
+    var thTime = document.createElement("th");
+    thTime.className = "time-col";
+    headRow.appendChild(thTime);
+    days.forEach(function(d, idx){
+      var th = document.createElement("th");
+      var dow = document.createElement("span");
+      dow.className = "dow";
+      dow.textContent = DOW_LABELS[idx];
+      var dd = document.createElement("span");
+      dd.className = "ddate";
+      dd.textContent = Ledger.fmtMonthDate(d);
+      th.appendChild(dow); th.appendChild(dd);
+      headRow.appendChild(th);
+    });
+    calendarHead.innerHTML = "";
+    calendarHead.appendChild(headRow);
+
+    // Body
+    calendarBody.innerHTML = "";
+    var now = new Date();
+    for (var min = BUSINESS_START; min < BUSINESS_END; min += STEP){
+      var tr = document.createElement("tr");
+      if (min % 60 === 0) tr.className = "hour-start";
+
+      var tdLabel = document.createElement("td");
+      tdLabel.className = "time-label";
+      tdLabel.textContent = Ledger.minutesToLabel(min);
+      tr.appendChild(tdLabel);
+
+      days.forEach(function(d){
+        var td = document.createElement("td");
+        var dISO = Ledger.dateISO(d);
+        var startMin = min, endMin = min + STEP;
+
+        var cellStart = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0,0,0);
+        cellStart.setMinutes(startMin);
+
+        var reservation = Ledger.findReservation(reservations, dISO, startMin);
+        var busySummary = !reservation ? Ledger.isBusy(icsEvents, d, startMin, endMin) : null;
+        var isPast = cellStart <= now;
+
+        var div = document.createElement("div");
+        div.className = "slot";
+
+        if (reservation){
+          // Personal details are intentionally not shown here; only the
+          // reservation holder (via email lookup) or the admin can see them.
+          div.classList.add("reserved");
+          div.title = "予約済み: " + Ledger.minutesToLabel(reservation.startMin) + "〜" + Ledger.minutesToLabel(reservation.endMin);
+          var tag = document.createElement("span");
+          tag.className = "stamp-mini";
+          tag.textContent = "予約済";
+          div.appendChild(tag);
+        } else if (busySummary){
+          div.classList.add("busy");
+          div.title = "予定あり";
+          var busyLabel = document.createElement("span");
+          busyLabel.className = "busy-label";
+          busyLabel.textContent = "予定あり";
+          div.appendChild(busyLabel);
+        } else if (isPast){
+          div.classList.add("past");
+          div.title = "受付終了";
+        } else {
+          div.classList.add("available");
+          div.tabIndex = 0;
+          div.setAttribute("role", "button");
+          div.title = "クリックして予約: " + Ledger.minutesToLabel(startMin) + "〜" + Ledger.minutesToLabel(endMin);
+          div.addEventListener("click", makeSlotHandler(dISO, startMin, endMin, d));
+          div.addEventListener("keydown", function(handler){
+            return function(e){
+              if (e.key === "Enter" || e.key === " "){ e.preventDefault(); handler(); }
+            };
+          }(makeSlotHandler(dISO, startMin, endMin, d)));
+        }
+
+        td.appendChild(div);
+        tr.appendChild(td);
+      });
+
+      calendarBody.appendChild(tr);
+    }
+  }
+
+  function makeSlotHandler(dISO, startMin, endMin, dayDate){
+    return function(){ openModal(dISO, startMin, endMin, dayDate); };
+  }
+
+  /* ================= Modal (booking) ================= */
+  var modalOverlay = document.getElementById("modalOverlay");
+  var modalSlotText = document.getElementById("modalSlotText");
+  var reservationForm = document.getElementById("reservationForm");
+  var nameInput = document.getElementById("nameInput");
+  var emailInput = document.getElementById("emailInput");
+  var nameField = document.getElementById("nameField");
+  var emailField = document.getElementById("emailField");
+  var modalCancelBtn = document.getElementById("modalCancelBtn");
+
+  function openModal(dISO, startMin, endMin, dayDate){
+    pendingSlot = { dateISO: dISO, startMin: startMin, endMin: endMin };
+    modalSlotText.textContent = Ledger.fmtFullDate(dayDate) + " " + Ledger.minutesToLabel(startMin) + "〜" + Ledger.minutesToLabel(endMin);
+    nameInput.value = ""; emailInput.value = "";
+    nameField.classList.remove("invalid"); emailField.classList.remove("invalid");
+    modalOverlay.classList.add("open");
+    setTimeout(function(){ nameInput.focus(); }, 30);
+  }
+  function closeModal(){
+    modalOverlay.classList.remove("open");
+    pendingSlot = null;
+  }
+  modalCancelBtn.addEventListener("click", closeModal);
+  modalOverlay.addEventListener("click", function(e){
+    if (e.target === modalOverlay) closeModal();
+  });
+  document.addEventListener("keydown", function(e){
+    if (e.key === "Escape" && modalOverlay.classList.contains("open")) closeModal();
+  });
+
+  reservationForm.addEventListener("submit", function(e){
+    e.preventDefault();
+    if (!pendingSlot) return;
+
+    var name = nameInput.value.trim();
+    var email = emailInput.value.trim();
+    var emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    var ok = true;
+
+    if (!name){ nameField.classList.add("invalid"); ok = false; } else { nameField.classList.remove("invalid"); }
+    if (!emailOk){ emailField.classList.add("invalid"); ok = false; } else { emailField.classList.remove("invalid"); }
+    if (!ok) return;
+
+    // guard against the slot being taken since the modal opened
+    var already = Ledger.findReservation(reservations, pendingSlot.dateISO, pendingSlot.startMin);
+    if (already){
+      closeModal();
+      renderCalendar();
+      showToast("この時間枠は既に予約済みです");
+      return;
+    }
+
+    var reservation = {
+      id: "r" + Date.now() + Math.random().toString(16).slice(2),
+      dateISO: pendingSlot.dateISO,
+      startMin: pendingSlot.startMin,
+      endMin: pendingSlot.endMin,
+      name: name,
+      email: email
+    };
+    reservations.push(reservation);
+    var saved = Ledger.saveReservations(reservations);
+    closeModal();
+    renderCalendar();
+    // If the lookup panel currently shows results for this email, refresh it.
+    if (lookupEmailInput.value.trim() && Ledger.normalizeEmail(lookupEmailInput.value) === Ledger.normalizeEmail(email)){
+      runLookup(email);
+    }
+    showToast(saved ? (name + "様の予約を確定しました") : "予約の保存に失敗しました。ブラウザの設定をご確認ください。");
+  });
+
+  /* ================= Lookup / cancel (email-gated) ================= */
+  var lookupForm = document.getElementById("lookupForm");
+  var lookupEmailInput = document.getElementById("lookupEmail");
+  var lookupField = document.getElementById("lookupField");
+  var lookupResultsEl = document.getElementById("lookupResults");
+  var lookupCount = document.getElementById("lookupCount");
+
+  lookupForm.addEventListener("submit", function(e){
+    e.preventDefault();
+    var email = lookupEmailInput.value.trim();
+    var emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if (!emailOk){
+      lookupField.classList.add("invalid");
+      lookupResultsEl.innerHTML = "";
+      lookupCount.textContent = "";
+      return;
+    }
+    lookupField.classList.remove("invalid");
+    runLookup(email);
+  });
+
+  function runLookup(email){
+    var target = Ledger.normalizeEmail(email);
+    var matches = reservations.filter(function(r){ return Ledger.normalizeEmail(r.email) === target; })
+      .sort(function(a,b){
+        if (a.dateISO !== b.dateISO) return a.dateISO < b.dateISO ? -1 : 1;
+        return a.startMin - b.startMin;
+      });
+
+    lookupCount.textContent = matches.length ? "(" + matches.length + "件)" : "";
+    lookupResultsEl.innerHTML = "";
+
+    if (!matches.length){
+      var empty = document.createElement("li");
+      empty.innerHTML = '<div class="empty-state">該当する予約が見つかりませんでした。<br>入力したメールアドレスをご確認ください。</div>';
+      lookupResultsEl.appendChild(empty);
+      return;
+    }
+
+    matches.forEach(function(r){
+      var li = document.createElement("li");
+      li.className = "reservation-card";
+
+      li.innerHTML =
+        '<div class="row-top">' +
+          '<div class="stamp">確定</div>' +
+          '<div class="info">' +
+            '<div class="dt">' + Ledger.fmtCardDate(r.dateISO) + " " + Ledger.minutesToLabel(r.startMin) + "〜" + Ledger.minutesToLabel(r.endMin) + '</div>' +
+            '<div class="name">' + Ledger.escapeHtml(r.name) + ' 様</div>' +
+            '<div class="mail">' + Ledger.escapeHtml(r.email) + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<button class="cancel-btn" data-id="' + r.id + '">キャンセル</button>';
+
+      lookupResultsEl.appendChild(li);
+    });
+
+    Array.prototype.slice.call(lookupResultsEl.querySelectorAll(".cancel-btn")).forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var id = btn.getAttribute("data-id");
+        reservations = reservations.filter(function(r){ return r.id !== id; });
+        var saved = Ledger.saveReservations(reservations);
+        renderCalendar();
+        runLookup(email);
+        showToast(saved ? "予約を取り消しました" : "取り消しの保存に失敗しました。ブラウザの設定をご確認ください。");
+      });
+    });
+  }
+
+  /* ================= Toast ================= */
+  var toast = document.getElementById("toast");
+  var toastText = document.getElementById("toastText");
+  var toastTimer = null;
+  function showToast(msg){
+    toastText.textContent = msg;
+    toast.classList.add("show");
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toast.classList.remove("show"); }, 2600);
+  }
+
+  /* ================= Init ================= */
+  document.getElementById("todayNote").textContent = Ledger.fmtFullDate(new Date());
+  if (!Ledger.isStorageAvailable()){
+    document.getElementById("storageWarning").classList.add("show");
+  }
+  renderCalendar();
+
+})();
+</script>
+</body>
+</html>
