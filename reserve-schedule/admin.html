@@ -177,8 +177,11 @@
   }
   .res-card .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:4px 14px; font-size:0.8rem; margin-bottom:8px; }
   .res-card .grid2 .k{ color:var(--text-light); font-size:0.68rem; }
+  /* 長いメールアドレス・長い改行なし文字列（URL等）でカードが横に伸びるのを防ぐ
+     （バグ報告.md【軽微】「長いURLで確認画面と管理画面が大きく横に伸びる」対応）。 */
+  .res-card .grid2 div{ overflow-wrap:anywhere; min-width:0; }
   .res-card .menus{ font-size:0.8rem; margin-bottom:6px; }
-  .res-card .note{ font-size:0.78rem; color:var(--text-mid); background:var(--cream); border-radius:6px; padding:8px 10px; margin-bottom:8px; }
+  .res-card .note{ font-size:0.78rem; color:var(--text-mid); background:var(--cream); border-radius:6px; padding:8px 10px; margin-bottom:8px; overflow-wrap:anywhere; min-width:0; }
   .res-card .cancel-warning{ font-size:0.74rem; color:var(--danger); margin-bottom:8px; }
   .cancel-btn{
     border:1px solid var(--danger); color:var(--danger); background:#fff;
@@ -242,6 +245,28 @@
   }
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 
+  /* ---------- Storage corruption banner ---------- */
+  .storage-warning{
+    display:none;
+    max-width:920px; margin:10px auto 0; padding:12px 18px;
+  }
+  .storage-warning.show{ display:block; }
+  .storage-warning .box{
+    background:var(--danger-tint); border:1px solid var(--danger); color:var(--danger);
+    border-radius:8px; padding:12px 14px; font-size:0.8rem; display:flex; flex-wrap:wrap;
+    align-items:center; gap:10px; justify-content:space-between;
+  }
+  .storage-warning .box .msg{ flex:1 1 260px; }
+  .storage-warning .box button{
+    border:1px solid var(--danger); color:var(--danger); background:#fff; border-radius:6px;
+    padding:6px 12px; font-size:0.74rem; cursor:pointer; white-space:nowrap;
+  }
+  .storage-warning .box button:hover{ background:var(--danger-tint); }
+
+  /* ---------- 過去分表示トグル ---------- */
+  .past-toggle{ display:flex; align-items:center; gap:8px; font-size:0.78rem; color:var(--text-mid); margin:14px 0 4px; }
+  .past-toggle input{ width:16px; height:16px; accent-color:var(--earth); }
+
   @media (max-width: 600px){
     .res-card .grid2{ grid-template-columns:1fr; }
   }
@@ -268,6 +293,9 @@
 <p style="max-width:920px; margin:6px auto 0; padding:0 18px; font-size:0.7rem; color:var(--text-light);">
   ※ 別のタブ・端末で入った新しいご予約は自動反映されません。「最新の状態に更新」を押すか、ページを再読み込みしてください。
 </p>
+
+<!-- localStorage破損検知時の警告バナー（バグ報告.md【重大】対応） -->
+<div class="storage-warning" id="storageWarning"></div>
 
 <main class="wrap">
 
@@ -352,6 +380,7 @@
         <button type="submit" class="btn btn-primary">登録する</button>
       </form>
 
+      <label class="past-toggle"><input type="checkbox" id="showPastBlocks">過去分も表示する</label>
       <ul class="block-list" id="blockList"></ul>
     </div>
   </section>
@@ -470,7 +499,11 @@
   function renderCalendar(){
     var days = [];
     for (var i=0;i<7;i++){ days.push(L.addDays(currentWeekStart, i)); }
-    weekRange.textContent = L.fmtMonthDate(days[0]) + " 〜 " + L.fmtMonthDate(days[6]) + "  (" + days[0].getFullYear() + ")";
+    // 年をまたぐ週は開始年しか表示していなかったため、両端の年が異なる場合は両方表示する
+    // （バグ報告.md【軽微】「週表示が年をまたぐ週で開始年しか表示しない」対応）。
+    weekRange.textContent = (days[0].getFullYear() === days[6].getFullYear())
+      ? (L.fmtMonthDate(days[0]) + " 〜 " + L.fmtMonthDate(days[6]) + "  (" + days[0].getFullYear() + ")")
+      : (days[0].getFullYear() + "/" + L.fmtMonthDate(days[0]) + " 〜 " + days[6].getFullYear() + "/" + L.fmtMonthDate(days[6]));
 
     var headRow = document.createElement("tr");
     var thTime = document.createElement("th");
@@ -486,7 +519,17 @@
 
     calendarBody.innerHTML = "";
     var now = new Date();
-    var start = effectiveCfg.BUSINESS_START, end = effectiveCfg.BUSINESS_END, step = effectiveCfg.STEP;
+    var step = effectiveCfg.STEP;
+    // 営業時間外に登録された時間帯ブロックがあっても週間カレンダーに表示されるよう、
+    // 描画範囲を「営業時間 ∪ その週のブロックの時間帯」に広げる
+    // （バグ報告.md【軽微】「営業時間外に登録した時間帯ブロックがカレンダーに表示されない」対応）。
+    var weekISOs = days.map(function(d){ return L.dateISO(d); });
+    var start = effectiveCfg.BUSINESS_START, end = effectiveCfg.BUSINESS_END;
+    blockedSlots.forEach(function(b){
+      if (b.allDay || weekISOs.indexOf(b.dateISO) === -1) return;
+      if (typeof b.startMin === "number") start = Math.min(start, b.startMin);
+      if (typeof b.endMin === "number") end = Math.max(end, b.endMin);
+    });
     for (var min = start; min < end; min += step){
       var tr = document.createElement("tr");
       if (min % 60 === 0) tr.className = "hour-start";
@@ -595,7 +638,7 @@
       li.innerHTML =
         '<div class="row-top">' +
           '<span class="dt">' + L.fmtCardDate(r.dateISO) + " " + L.minutesToLabel(r.startMin) + "〜" + L.minutesToLabel(r.endMin) + (isToday ? '<span class="today-tag">本日</span>' : '') + '</span>' +
-          '<button class="cancel-btn" data-id="' + r.id + '">キャンセル</button>' +
+          '<button class="cancel-btn" data-id="' + L.escapeHtml(r.id) + '">キャンセル</button>' +
         '</div>' +
         (isToday ? '<div class="cancel-warning">⚠ 本日分の予約です。当日キャンセルは施術料金の100%を申し受ける対象です。</div>' : '') +
         '<div class="grid2">' +
@@ -624,7 +667,7 @@
             showToast("予約をキャンセルしました");
             reloadAll().then(function(){ renderCalendar(); renderReservationList(); });
           } else {
-            showToast("キャンセルに失敗しました");
+            showToast(res.error || "キャンセルに失敗しました");
           }
         });
       });
@@ -641,17 +684,24 @@
   var blockReason = document.getElementById("blockReason");
   var blockListEl = document.getElementById("blockList");
 
-  function fillTimeOptions(select){
+  /* 終了時刻の選択肢に24:00を含める（開始時刻は含めない。24:00始まりのブロックは無意味なため）。
+     営業終了(24:00)ちょうどまでブロックしたいケース（23:30〜24:00等）に対応する
+     （バグ報告.md【軽微】「ブロック終了時刻に24:00がなく23:30〜24:00の枠だけブロックできない」対応）。
+     この選択肢のリスト自体は営業時間設定に依存しない固定リストなので、設定変更や
+     ⟳更新のたびに呼び直す必要はない（呼び直すと選択中の値がリセットされてしまうバグの原因
+     だったため、呼び出し箇所自体を initの1回だけに絞った）。 */
+  function fillTimeOptions(select, includeEnd){
     select.innerHTML = "";
-    for (var m = 0; m < 24*60; m += 30){
+    var max = includeEnd ? 24*60 : 24*60 - 30;
+    for (var m = 0; m <= max; m += 30){
       var opt = document.createElement("option");
       opt.value = String(m);
       opt.textContent = L.minutesToLabel(m);
       select.appendChild(opt);
     }
   }
-  fillTimeOptions(blockStart);
-  fillTimeOptions(blockEnd);
+  fillTimeOptions(blockStart, false);
+  fillTimeOptions(blockEnd, true);
   blockStart.value = String(effectiveCfg.BUSINESS_START);
   blockEnd.value = String(effectiveCfg.BUSINESS_START + 60);
 
@@ -666,6 +716,22 @@
     var startMin = allDay ? null : Number(blockStart.value);
     var endMin = allDay ? null : Number(blockEnd.value);
     if (!allDay && startMin >= endMin){ showToast("終了時刻は開始時刻より後にしてください"); return; }
+
+    // 過去日への登録は実害こそ小さいが無制限に蓄積してしまうため、確認を挟む
+    // （バグ報告.md【軽微】「過去日の休業日・ブロックを登録でき、無制限に蓄積する」対応）。
+    var todayISOForBlock = L.dateISO(new Date());
+    if (blockDate.value < todayISOForBlock){
+      if (!window.confirm("選択した日付（" + blockDate.value + "）は過去の日付です。このまま登録しますか？")) return;
+    }
+
+    // 既存予約がある日を終日休業にする場合は、サロン側の見落としを防ぐため確認を挟む
+    // （バグ報告.md【改善提案】「既存の予約がある日を終日休業にしても警告が出ない」対応）。
+    if (allDay){
+      var sameDayReservationCount = reservations.filter(function(r){ return r.dateISO === blockDate.value; }).length;
+      if (sameDayReservationCount > 0){
+        if (!window.confirm("この日（" + blockDate.value + "）にはすでに" + sameDayReservationCount + "件のご予約が入っています。終日休業として登録しますか？\n（ご予約自体はキャンセルされません。お客様への対応は別途ご確認ください）")) return;
+      }
+    }
 
     L.api.createBlockedSlot({
       dateISO: blockDate.value,
@@ -685,11 +751,18 @@
     });
   });
 
+  var showPastBlocksCheckbox = document.getElementById("showPastBlocks");
+  showPastBlocksCheckbox.addEventListener("change", renderBlockList);
+
   function renderBlockList(){
-    var sorted = blockedSlots.slice().sort(function(a,b){ return a.dateISO < b.dateISO ? -1 : (a.dateISO > b.dateISO ? 1 : 0); });
+    var todayISOForBlock = L.dateISO(new Date());
+    var showPast = showPastBlocksCheckbox.checked;
+    var sorted = blockedSlots.slice()
+      .filter(function(b){ return showPast || b.dateISO >= todayISOForBlock; })
+      .sort(function(a,b){ return a.dateISO < b.dateISO ? -1 : (a.dateISO > b.dateISO ? 1 : 0); });
     blockListEl.innerHTML = "";
     if (!sorted.length){
-      blockListEl.innerHTML = '<li class="empty-state">登録されている休業日・ブロックはありません。</li>';
+      blockListEl.innerHTML = '<li class="empty-state">' + (showPast ? "登録されている休業日・ブロックはありません。" : "本日以降に登録されている休業日・ブロックはありません。") + '</li>';
       return;
     }
     sorted.forEach(function(b){
@@ -705,7 +778,7 @@
           (b.reason ? '<br><span style="color:var(--text-mid);">' + L.escapeHtml(b.reason) + '</span>' : '') +
           (isGCal ? '<span class="gcal-note">※Googleカレンダー側の予定を削除すると次回同期で解除されます（フェーズ③実装後）</span>' : '') +
         '</div>' +
-        '<button class="del-btn" data-id="' + b.id + '"' + (isGCal ? ' disabled' : '') + '>削除</button>';
+        '<button class="del-btn" data-id="' + L.escapeHtml(b.id) + '"' + (isGCal ? ' disabled' : '') + '>削除</button>';
       blockListEl.appendChild(li);
     });
     Array.prototype.forEach.call(blockListEl.querySelectorAll(".del-btn:not(:disabled)"), function(btn){
@@ -761,13 +834,20 @@
       cutoffMin: Math.round(Number(setCutoffHours.value || 0) * 60),
       maxAdvanceDays: Math.round(Number(setMaxAdvanceDays.value || L.BOOKING_CONFIG.MAX_ADVANCE_DAYS))
     };
+    // 営業開始 >= 営業終了 を保存前に検証する（バグ報告.md【重大】
+    // 「営業開始>営業終了を検証なしで保存でき、予約システム全体が停止する」対応）。
+    // shared.js の updateSettings 側でも同じ検証を行っているが、画面側でも早期に弾いて
+    // 通信を発生させずエラーを表示する（ブロック時間登録の検証と同じ書き方に揃えている）。
+    if (payload.businessStart >= payload.businessEnd){
+      showToast("営業終了時刻は営業開始時刻より後にしてください");
+      return;
+    }
     L.api.updateSettings(payload).then(function(res){
       if (res.ok){
         settingsSaveMsg.classList.add("show");
         showToast("設定を保存しました");
         reloadAll().then(function(){
           renderSettingsForm();
-          fillTimeOptions(blockStart); fillTimeOptions(blockEnd);
           renderCalendar();
         });
       } else {
@@ -783,10 +863,54 @@
       renderReservationList();
       renderBlockList();
       renderSettingsForm();
-      fillTimeOptions(blockStart); fillTimeOptions(blockEnd);
+      renderStorageWarning();
       showToast("最新の状態に更新しました");
     });
   });
+
+  /* ================= localStorage破損の警告バナー =================
+     バグ報告.md【重大】「localStorageのJSONが壊れると全予約が黙って消える」対応。
+     破損を検知した場合は、上書き保存を止めるだけでなく管理画面に明示的な警告を出す。
+     「破損データを消去して再開する」は、壊れたキー自体を削除して空の状態から再開する
+     操作（退避コピーは残るため、必要であれば開発者ツールで <キー名>.corrupt.<日時> を確認できる）。 */
+  var storageWarningEl = document.getElementById("storageWarning");
+  var STORAGE_TARGET_LABELS = { reservations:"予約データ", blockedSlots:"休業日・ブロックデータ", settings:"設定データ" };
+  function renderStorageWarning(){
+    L.api.getStorageHealth().then(function(health){
+      var brokenTargets = [];
+      if (health.reservationsCorrupted) brokenTargets.push("reservations");
+      if (health.blockedSlotsCorrupted) brokenTargets.push("blockedSlots");
+      if (health.settingsCorrupted) brokenTargets.push("settings");
+      if (!brokenTargets.length){
+        storageWarningEl.classList.remove("show");
+        storageWarningEl.innerHTML = "";
+        return;
+      }
+      storageWarningEl.innerHTML = brokenTargets.map(function(target){
+        return '<div class="box">' +
+          '<span class="msg">⚠ ' + STORAGE_TARGET_LABELS[target] + 'を正しく読み取れませんでした。データが破損している可能性があるため、安全のためこのデータへの保存を停止しています（既存の壊れたデータはそのまま残っています。新しいご予約が上書きで消えることはありません）。</span>' +
+          '<button type="button" class="ack-corruption-btn" data-target="' + target + '">破損データを消去して再開する</button>' +
+        '</div>';
+      }).join("");
+      storageWarningEl.classList.add("show");
+      Array.prototype.forEach.call(storageWarningEl.querySelectorAll(".ack-corruption-btn"), function(btn){
+        btn.addEventListener("click", function(){
+          var target = btn.getAttribute("data-target");
+          if (!window.confirm(STORAGE_TARGET_LABELS[target] + "を空の状態から再開します。破損した元データの退避コピーはブラウザのlocalStorageに残ります。よろしいですか？")) return;
+          L.api.acknowledgeStorageCorruption(target).then(function(res){
+            if (res.ok){
+              showToast(STORAGE_TARGET_LABELS[target] + "を再開しました");
+              reloadAll().then(function(){
+                renderCalendar(); renderReservationList(); renderBlockList(); renderSettingsForm(); renderStorageWarning();
+              });
+            } else {
+              showToast(res.error || "解除に失敗しました");
+            }
+          });
+        });
+      });
+    });
+  }
 
   /* ================= Init ================= */
   if (!L.isStorageAvailable()){
@@ -797,7 +921,7 @@
     renderReservationList();
     renderBlockList();
     renderSettingsForm();
-    fillTimeOptions(blockStart); fillTimeOptions(blockEnd);
+    renderStorageWarning();
     blockStart.value = String(effectiveCfg.BUSINESS_START);
     blockEnd.value = String(effectiveCfg.BUSINESS_START + 60);
   });

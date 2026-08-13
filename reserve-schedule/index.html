@@ -273,6 +273,13 @@
     content:'休';
     position:absolute; bottom:2px; font-size:0.5rem; color:var(--danger);
   }
+  /* 休業日ではないが、選択中メニューの合計時間では確保できる空き枠が1つも無い日
+     （終日ではない時間帯ブロックや、既存予約で実質埋まっている日）を「満」として区別する。
+     休業日と違いお客様都合では避けられない状態ではないため、警告色ではなく控えめな色にする。 */
+  .month-grid .day-cell.full-mark::after{
+    content:'満';
+    position:absolute; bottom:2px; font-size:0.5rem; color:var(--text-light);
+  }
 
   .time-slot-section{ margin-top:20px; }
   .time-slot-section h3{
@@ -345,8 +352,15 @@
     border-bottom:1px solid var(--sand);
   }
   .confirm-row{ display:flex; justify-content:space-between; gap:10px; font-size:0.82rem; padding:5px 0; }
-  .confirm-row .k{ color:var(--text-mid); flex:0 0 auto; }
-  .confirm-row .v{ text-align:right; color:var(--text-dark); }
+  /* 375px幅でメニュー名が長いと価格側が画面外に出ていた問題への対応。
+     k（ラベル側）を伸縮可能にして折り返させ、v（値側）は縮小はするが折り返しが必要な
+     場合（長いご要望・長いメールアドレス等）にも対応できるよう overflow-wrap を効かせる。
+     .k/.v どちらが長くなるケースも confirm-row 系のパネル（確認・完了・照会結果）で
+     共通して使われているため、片方だけ nowrap に固定する対応は取らなかった
+     （バグ報告.md の修正案どおりに .v を white-space:nowrap にすると、ご要望欄の長いURL等が
+     今度は横に溢れてしまうため）。 */
+  .confirm-row .k{ color:var(--text-mid); flex:1 1 auto; min-width:0; overflow-wrap:anywhere; }
+  .confirm-row .v{ text-align:right; color:var(--text-dark); flex:0 1 auto; min-width:0; overflow-wrap:anywhere; }
   .confirm-total{
     display:flex; justify-content:space-between; align-items:baseline;
     border-top:1px solid var(--sand);
@@ -613,27 +627,27 @@
     <form id="customerForm" novalidate>
       <div class="field" id="fName">
         <label for="inName">お名前<span class="req">必須</span></label>
-        <input type="text" id="inName" autocomplete="name" placeholder="山田 太郎" required>
+        <input type="text" id="inName" autocomplete="name" placeholder="山田 太郎" maxlength="50" required>
         <div class="err-msg">お名前を入力してください。</div>
       </div>
       <div class="field" id="fKana">
         <label for="inKana">フリガナ<span class="req">必須</span></label>
-        <input type="text" id="inKana" autocomplete="off" placeholder="ヤマダ タロウ" required>
+        <input type="text" id="inKana" autocomplete="off" placeholder="ヤマダ タロウ" maxlength="50" required>
         <div class="err-msg">フリガナを入力してください。</div>
       </div>
       <div class="field" id="fTel">
         <label for="inTel">電話番号<span class="req">必須</span></label>
-        <input type="tel" id="inTel" autocomplete="tel" placeholder="09012345678" inputmode="numeric" required>
+        <input type="tel" id="inTel" autocomplete="tel" placeholder="09012345678" inputmode="numeric" maxlength="20" required>
         <div class="err-msg">ハイフンなしの半角数字で電話番号を入力してください。</div>
       </div>
       <div class="field" id="fEmail">
         <label for="inEmail">メールアドレス<span class="req">必須</span></label>
-        <input type="email" id="inEmail" autocomplete="email" placeholder="taro@example.com" required>
+        <input type="email" id="inEmail" autocomplete="email" placeholder="taro@example.com" maxlength="254" required>
         <div class="err-msg">正しいメールアドレスを入力してください。</div>
       </div>
       <div class="field">
         <label for="inNote">ご要望・ご相談（任意）</label>
-        <textarea id="inNote" placeholder="体の気になる部分や、当日ご相談したいことがあればご記入ください"></textarea>
+        <textarea id="inNote" placeholder="体の気になる部分や、当日ご相談したいことがあればご記入ください" maxlength="1000"></textarea>
       </div>
     </form>
   </section>
@@ -751,6 +765,12 @@
 (function(){
   "use strict";
   var L = window.Ledger;
+  /* ⚠ CFG は起動直後は BOOKING_CONFIG の初期値（フォールバック）。
+     init処理内で L.api.getSettings() の結果をマージしてから showStep(1) を呼ぶため、
+     画面が実際に操作可能になる時点では管理画面「設定」の変更（営業時間・受付締切・
+     予約可能日数）が必ず反映された状態になる
+     （バグ報告.md【重大】「管理画面の予約可能日数が客側カレンダーに反映されない」対応）。
+     LINE_URL・TEL 等の店舗固定値は getSettings() の対象外なので BOOKING_CONFIG 側の値を保持する。 */
   var CFG = L.BOOKING_CONFIG;
 
   /* ================= State ================= */
@@ -823,13 +843,25 @@
   var panels = Array.prototype.slice.call(document.querySelectorAll(".step-panel"));
   function showStep(n){
     state.step = n;
+    // 送信中に「戻る」が押せてしまう問題への対応。ステップ遷移のたびに必ず解除しておく
+    // （送信中はsubmitConfirm側でtrueにする。これでどの経路で抜けても disabled のまま残らない）。
+    backBtn.disabled = false;
     panels.forEach(function(p){
       p.classList.toggle("active", Number(p.getAttribute("data-step")) === n);
     });
     renderStepIndicator();
     renderBottomBar();
     window.scrollTo({ top:0, behavior:"instant" in window ? "instant" : "auto" });
-    if (n === 2) renderCalendar();
+    if (n === 2){
+      renderCalendar();
+      // メニュー変更後にSTEP2へ戻った場合、古い日時選択に紐づく時間帯一覧が残らないようにする
+      // （バグ報告.md【軽微】「メニューを変更してSTEP2に戻ると古い枠が残る」対応）。
+      if (!state.dateISO){
+        timeSlotSection.style.display = "none";
+        timeGrid.innerHTML = "";
+        noSlotsMsg.style.display = "none";
+      }
+    }
     if (n === 4) renderConfirm();
   }
 
@@ -951,8 +983,15 @@
 
     var cells = L.buildMonthGrid(state.calendarMonth);
     var todayISO = L.dateISO(now);
+    var win = currentServiceWindow();
+    var minutesNeeded = totalMinutes();
 
-    L.api.getBlockedSlots({ from: range.fromISO, to: range.toISO }).then(function(blocked){
+    Promise.all([
+      L.api.getBlockedSlots({ from: range.fromISO, to: range.toISO }),
+      L.api.getReservations({ from: range.fromISO, to: range.toISO })
+    ]).then(function(results){
+      var blocked = results[0];
+      var monthReservations = results[1];
       state.monthBlockedFullDayISOs = blocked.filter(function(b){ return b.allDay; }).map(function(b){ return b.dateISO; });
       monthGrid.innerHTML = "";
       cells.forEach(function(d){
@@ -970,8 +1009,22 @@
             cell.classList.add("disabled");
             if (holiday) cell.classList.add("holiday-mark");
           } else {
-            if (dISO === state.dateISO) cell.classList.add("selected");
-            cell.addEventListener("click", function(){ selectDate(dISO, d); });
+            // 休業日ではないが、この日は選択中メニューの合計時間で確保できる空き枠が
+            // 1つも無いかどうかを判定する（「受付範囲外の日」と「満枠の日」を見分けられるように
+            // する。バグ報告.md【軽微】「満枠の日が選択可能に見える」対応）。
+            var dayReservations = monthReservations.filter(function(r){ return r.dateISO === dISO; });
+            var dayBlocked = blocked.filter(function(b){ return b.dateISO === dISO; });
+            var starts = L.computeAvailableStartTimes({
+              dateISO: dISO, totalMinutes: minutesNeeded, now: now,
+              reservations: dayReservations, blockedSlots: dayBlocked,
+              serviceWindow: win, cfg: CFG
+            });
+            if (starts.length === 0){
+              cell.classList.add("disabled", "full-mark");
+            } else {
+              if (dISO === state.dateISO) cell.classList.add("selected");
+              cell.addEventListener("click", function(){ selectDate(dISO, d); });
+            }
           }
         }
         monthGrid.appendChild(cell);
@@ -997,13 +1050,19 @@
     timeGrid.innerHTML = '<p class="no-slots-msg">読み込み中…</p>';
     noSlotsMsg.style.display = "none";
 
+    var win = currentServiceWindow();
     L.api.getAvailability({
       dateISO: dISO,
       totalMinutes: totalMinutes(),
-      menuConstraints: { serviceWindow: currentServiceWindow() }
+      menuConstraints: { serviceWindow: win }
     }).then(function(starts){
       timeGrid.innerHTML = "";
       if (!starts.length){
+        // 「対応可能な時間帯が重ならない組み合わせ」と「単純に満枠」を見分けて案内する
+        // （バグ報告.md【改善提案】combineServiceWindows の impossible 対応）。
+        noSlotsMsg.textContent = (win && win.impossible)
+          ? "選択いただいたメニューの組み合わせは、対応可能な時間帯が重ならないため恐れ入りますがご予約いただけません。メニューの組み合わせをご確認ください。"
+          : "この日は、ご希望の合計時間で確保できる空き枠がありません。他の日をお選びください。";
         noSlotsMsg.style.display = "block";
         return;
       }
@@ -1043,8 +1102,10 @@
     });
   });
 
-  var TEL_RE = /^0\d{9,10}$/;
-  var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // 電話番号・メールアドレスの形式チェックは shared.js に集約し、admin.html側のデータ層検証と
+  // 同じ正規表現を共有する（バグ報告.md【軽微】「updateReservationContactに形式検証がない」対応）。
+  var TEL_RE = L.TEL_RE;
+  var EMAIL_RE = L.EMAIL_RE;
 
   function isCustomerValid(showErrors){
     var okName = state.customer.name.length > 0;
@@ -1151,6 +1212,9 @@
     if (!agreeCheckbox.checked) return;
     nextBtn.disabled = true;
     nextBtn.textContent = "送信中…";
+    // 確定通信中は「戻る」で入力内容を変えられないようにする
+    // （バグ報告.md【改善提案】「確定通信中に戻るボタンが押せる」対応）。
+    backBtn.disabled = true;
 
     var payload = {
       dateISO: state.dateISO,
@@ -1172,6 +1236,20 @@
 
     L.api.createReservation(payload).then(function(res){
       if (!res.ok){
+        backBtn.disabled = false;
+        // 確定時点で日時がもう選べなくなっていた場合（受付締切超過・満枠・重複など）は、
+        // お客様に日時を選び直していただけるようSTEP2へ戻し、その日の枠を再描画する
+        // （バグ報告.md【重大】「確定時の可用性再検証がない」対応）。
+        if (res.code === "UNAVAILABLE" || res.code === "CONFLICT"){
+          state.startMin = null; state.endMin = null;
+          showStep(2);
+          showToast(res.error || "この日時は選択できなくなりました。別の日時をお選びください。");
+          if (state.dateISO){
+            var reselectDate = L.isoToDate(state.dateISO);
+            selectDate(state.dateISO, reselectDate);
+          }
+          return;
+        }
         submitError.textContent = res.error || "予約の確定に失敗しました。";
         submitError.classList.add("show");
         renderBottomBar();
@@ -1181,6 +1259,7 @@
       renderComplete(res.reservation);
       showStep(5);
     }).catch(function(){
+      backBtn.disabled = false;
       submitError.textContent = "通信エラーが発生しました。もう一度お試しください。";
       submitError.classList.add("show");
       renderBottomBar();
@@ -1230,7 +1309,10 @@
 
   lookupForm.addEventListener("submit", function(e){
     e.preventDefault();
-    var tel = lookupTel.value.trim();
+    // ハイフン・全角数字の有無にかかわらず照会できるよう、保存側・入力側の両方を
+    // 同じ正規化（数字のみ）にそろえて突合する
+    // （バグ報告.md【軽微】「ハイフン付きの電話番号を入れるとヒットしない」対応）。
+    var tel = L.normalizeTel(lookupTel.value);
     var resNo = lookupResNo.value.trim();
     var email = lookupEmail.value.trim();
 
@@ -1248,10 +1330,10 @@
       var todayISO = L.dateISO(new Date());
       var matches;
       if (resNo){
-        matches = all.filter(function(r){ return r.customer && r.id === resNo && r.customer.tel === tel; });
+        matches = all.filter(function(r){ return r.customer && r.id === resNo && L.normalizeTel(r.customer.tel) === tel; });
       } else {
         var emailNorm = L.normalizeEmail(email);
-        matches = all.filter(function(r){ return r.customer && r.customer.tel === tel && L.normalizeEmail(r.customer.email) === emailNorm; });
+        matches = all.filter(function(r){ return r.customer && L.normalizeTel(r.customer.tel) === tel && L.normalizeEmail(r.customer.email) === emailNorm; });
       }
       // 過去の予約は照会結果に含めない（今日以降のみ）
       matches = matches.filter(function(r){ return r.dateISO >= todayISO; })
@@ -1357,7 +1439,24 @@
   renderMenuList();
   renderOptionList();
   renderCuppingBox();
-  showStep(1);
+
+  // 管理画面「設定」で変更された営業時間・受付締切・予約可能日数を、画面操作が始まる前に
+  // 必ず反映させる（BOOKING_CONFIG を直接参照していたバグへの対応。上部のCFG宣言を参照）。
+  // LINE_URL・TEL 等の店舗固定値は getSettings() の対象外のため BOOKING_CONFIG の値を保持したまま、
+  // 予約ルール系の値だけを上書きする。
+  L.api.getSettings().then(function(effective){
+    CFG = Object.assign({}, L.BOOKING_CONFIG, effective);
+  }).catch(function(){ /* 取得失敗時は初期値のまま続行する */ })
+    .then(function(){
+      return L.api.getStorageHealth();
+    }).then(function(health){
+      if (health && (health.reservationsCorrupted || health.blockedSlotsCorrupted || health.settingsCorrupted)){
+        showToast("システムに一時的な不具合が発生している可能性があります。ご不便をおかけし恐れ入りますが、店舗までお電話にてご確認ください。");
+      }
+    }).catch(function(){ /* 健全性チェック自体の失敗は致命的ではないため無視する */ })
+    .then(function(){
+      showStep(1);
+    });
 
 })();
 </script>
