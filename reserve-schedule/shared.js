@@ -30,7 +30,12 @@ window.Ledger = (function(){
     ACCESS: "JR北千住駅 東口 徒歩3分",
     OPEN_HOURS_LABEL: "12:00〜24:00",
     HOLIDAY_LABEL: "不定休（休業日は個別に設定）",
-    PAYMENT_METHODS_LABEL: "現金 / PayPay / Visa / Mastercard / JCB / American Express / 交通系IC"
+    PAYMENT_METHODS_LABEL: "現金 / PayPay / Visa / Mastercard / JCB / American Express / 交通系IC",
+
+    /* 予約が入った際の通知先メールアドレスの初期値（空でよい）。
+       管理画面「設定」で変更した値は settings ストレージに保存され、そちらが優先される。
+       フェーズ③で実際のメール送信処理を実装する。 */
+    NOTIFICATION_EMAILS: []
   };
 
   /* ルート index.html の LINE 友だち追加QRコード（base64）をそのまま流用 */
@@ -109,7 +114,9 @@ window.Ledger = (function(){
     }
   ];
 
-  /* ⚠ 仮データ：オーナー確認後に差し替えること */
+  /* ⚠ 仮データ：オーナー確認後に差し替えること。
+     汎用の有料オプション。正式な名前・時間・料金が未提供のため仮設定のまま残してある。
+     カッピング専用の内包オプション（CUPPING_OPTIONS、下記）とは別物なので混同しないこと。 */
   var OPTION_ITEMS = [
     { id: "opt-head",    title: "ヘッドマッサージ",       durationMin: 30, price: 2000 },
     { id: "opt-foot",    title: "足裏リフレクソロジー",     durationMin: 30, price: 2500 },
@@ -118,9 +125,55 @@ window.Ledger = (function(){
     { id: "opt-extend",  title: "延長30分",               durationMin: 30, price: 3000 }
   ];
 
+  /* 【本格火罐カッピング】メニューのID。この本体メニューが選択されているときだけ
+     下記 CUPPING_OPTIONS を画面に表示する。 */
+  var CUPPING_MENU_ID = "cupping60";
+
+  /* カッピングメニュー専用・内包オプション（正式データ / オーナー確定分 2026-08-13）。
+     追加料金・追加時間なし。60分の枠内でどう組み合わせるかをオーナーが把握するための
+     選択項目であり、合計時間・合計金額の計算には一切影響しない
+     （durationMin・price を持たせず、computeTotalMinutes / computeTotalPrice の対象外にしている）。
+     複数選択可。予約データには cuppingOptionIds として保存する。 */
+  var CUPPING_OPTIONS = [
+    { id: "cup-pore",     title: "毛穴洗浄 美白" },
+    { id: "cup-lymph",    title: "リンパドレナージュ" },
+    { id: "cup-stretch",  title: "お悩み箇所のストレッチ" },
+    { id: "cup-loosen",   title: "もみほぐし" },
+    { id: "cup-facial",   title: "フェイシャルエステ" },
+    { id: "cup-diet",     title: "ダイエット箇所" },
+    { id: "cup-footwork", title: "足踏み" }
+  ];
+
   /* ---------- Persistence（localStorage） ---------- */
   var STORAGE_RESERVATIONS = "cocosiaBooking.reservations";
   var STORAGE_BLOCKED_SLOTS = "cocosiaBooking.blockedSlots";
+  var STORAGE_SETTINGS = "cocosiaBooking.settings";
+
+  function loadSettings(){
+    try{
+      var raw = localStorage.getItem(STORAGE_SETTINGS);
+      return raw ? JSON.parse(raw) : {};
+    }catch(e){ return {}; }
+  }
+  function saveSettings(settings){
+    try{
+      localStorage.setItem(STORAGE_SETTINGS, JSON.stringify(settings));
+      return true;
+    }catch(e){ return false; }
+  }
+  /* 管理画面「設定」で変更された値を BOOKING_CONFIG の初期値にマージして返す。
+     予約ルール系のロジックは必ずこの関数経由で得た値を使うこと（BOOKING_CONFIG を直接参照しない）。 */
+  function getEffectiveConfig(){
+    var saved = loadSettings();
+    return {
+      BUSINESS_START: (typeof saved.businessStart === "number") ? saved.businessStart : BOOKING_CONFIG.BUSINESS_START,
+      BUSINESS_END:   (typeof saved.businessEnd === "number") ? saved.businessEnd : BOOKING_CONFIG.BUSINESS_END,
+      STEP: BOOKING_CONFIG.STEP,
+      CUTOFF_MIN: (typeof saved.cutoffMin === "number") ? saved.cutoffMin : BOOKING_CONFIG.CUTOFF_MIN,
+      MAX_ADVANCE_MONTHS: (typeof saved.maxAdvanceMonths === "number") ? saved.maxAdvanceMonths : BOOKING_CONFIG.MAX_ADVANCE_MONTHS,
+      NOTIFICATION_EMAILS: Array.isArray(saved.notificationEmails) ? saved.notificationEmails : BOOKING_CONFIG.NOTIFICATION_EMAILS
+    };
+  }
 
   function loadReservations(){
     try{
@@ -259,29 +312,34 @@ window.Ledger = (function(){
     });
     return win;
   }
-  /* 予約可能な日付範囲（本日〜2ヶ月後）のISO文字列を返す */
-  function bookableRange(now){
+  /* 予約可能な日付範囲（本日〜maxAdvanceMonths ヶ月後）のISO文字列を返す
+     cfg を省略した場合は BOOKING_CONFIG の初期値を使う（フェーズ①の簡易呼び出し用）。 */
+  function bookableRange(now, cfg){
+    cfg = cfg || BOOKING_CONFIG;
     var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    var maxDate = addMonths(today, BOOKING_CONFIG.MAX_ADVANCE_MONTHS);
+    var maxDate = addMonths(today, cfg.MAX_ADVANCE_MONTHS);
     return { fromISO: dateISO(today), toISO: dateISO(maxDate) };
   }
-  function isBookableDate(dISO, now){
-    var range = bookableRange(now);
+  function isBookableDate(dISO, now, cfg){
+    var range = bookableRange(now, cfg);
     return dISO >= range.fromISO && dISO <= range.toISO;
   }
 
-  /* 指定日・指定合計時間で予約可能な開始時刻(分)の一覧を返す純粋関数
+  /* 指定日・指定合計時間で予約可能な開始時刻(分)の一覧を返す純粋関数。
+     予約(reservations)・手動ブロック・カレンダー由来ブロック(いずれもblockedSlots)を
+     区別せず、一律に「埋まっている」として扱う。
      opts: {
        dateISO, totalMinutes, now,
        reservations: [{dateISO,startMin,endMin}, ...]  (その日のみで良い),
-       blockedSlots: [{dateISO,allDay,startMin,endMin}, ...] (その日のみで良い),
-       startWindow: {min,max} | null
+       blockedSlots: [{dateISO,allDay,startMin,endMin,source}, ...] (その日のみで良い),
+       startWindow: {min,max} | null,
+       cfg: { BUSINESS_START, BUSINESS_END, STEP, CUTOFF_MIN, MAX_ADVANCE_MONTHS } (省略時はBOOKING_CONFIG)
      }
   */
   function computeAvailableStartTimes(opts){
-    var cfg = BOOKING_CONFIG;
+    var cfg = opts.cfg || BOOKING_CONFIG;
     var results = [];
-    if (!isBookableDate(opts.dateISO, opts.now)) return results;
+    if (!isBookableDate(opts.dateISO, opts.now, cfg)) return results;
 
     var fullDayBlocked = (opts.blockedSlots||[]).some(function(b){
       return b.dateISO === opts.dateISO && b.allDay;
@@ -385,18 +443,46 @@ window.Ledger = (function(){
       });
     },
 
-    /* 休業日・ブロック時間の取得（期間指定） */
+    /* お客様が予約後に連絡先（電話・メール）を修正する。
+       呼び出し側で本人確認（予約番号＋電話番号の一致など）を行ってから呼ぶこと。 */
+    updateReservationContact: function(id, contact){
+      return Promise.resolve().then(function(){
+        var reservations = loadReservations();
+        var target = null;
+        var next = reservations.map(function(r){
+          if (r.id !== id) return r;
+          target = Object.assign({}, r, {
+            customer: Object.assign({}, r.customer, {
+              tel: (contact && typeof contact.tel === "string" && contact.tel.trim()) ? contact.tel.trim() : r.customer.tel,
+              email: (contact && typeof contact.email === "string" && contact.email.trim()) ? contact.email.trim() : r.customer.email
+            })
+          });
+          return target;
+        });
+        if (!target){
+          return { ok:false, error:"該当する予約が見つかりませんでした。" };
+        }
+        var saved = saveReservations(next);
+        if (!saved){
+          return { ok:false, error:"保存に失敗しました。" };
+        }
+        return { ok:true, reservation: target };
+      });
+    },
+
+    /* 休業日・ブロック時間の取得（期間指定）。各要素に source（'manual'|'google-calendar'）を含む */
     getBlockedSlots: function(range){
       return Promise.resolve().then(function(){
         return filterByRange(loadBlockedSlots(), range);
       });
     },
 
-    /* 休業日・ブロック時間の登録 */
+    /* 休業日・ブロック時間の登録。source省略時は 'manual'（管理画面からの手動登録）扱い。
+       'google-calendar' はフェーズ③でカレンダー同期処理から呼ばれる想定。 */
     createBlockedSlot: function(payload){
       return Promise.resolve().then(function(){
         var blockedSlots = loadBlockedSlots();
-        var slot = Object.assign({ id: uid("b") }, payload);
+        var slot = Object.assign({ id: uid("b"), source: "manual" }, payload);
         blockedSlots.push(slot);
         var saved = saveBlockedSlots(blockedSlots);
         if (!saved){
@@ -406,10 +492,16 @@ window.Ledger = (function(){
       });
     },
 
-    /* 休業日・ブロック時間の削除 */
+    /* 休業日・ブロック時間の削除。
+       source が 'google-calendar' のものは次回同期で復活してしまうため削除を拒否する
+       （カレンダー側の予定を削除する運用を想定。フェーズ③実装時に自動再削除ロジックへ差し替え可）。 */
     deleteBlockedSlot: function(id){
       return Promise.resolve().then(function(){
         var blockedSlots = loadBlockedSlots();
+        var target = blockedSlots.filter(function(b){ return b.id === id; })[0];
+        if (target && target.source === "google-calendar"){
+          return { ok:false, error:"Googleカレンダー由来のブロックは削除できません。カレンダー側の予定を削除してください。" };
+        }
         var next = blockedSlots.filter(function(b){ return b.id !== id; });
         var saved = saveBlockedSlots(next);
         return { ok: saved };
@@ -420,6 +512,7 @@ window.Ledger = (function(){
        opts: { dateISO, totalMinutes, menuConstraints:{startWindow} } */
     getAvailability: function(opts){
       return Promise.resolve().then(function(){
+        var cfg = getEffectiveConfig();
         var reservations = loadReservations().filter(function(r){ return r.dateISO === opts.dateISO; });
         var blockedSlots = loadBlockedSlots().filter(function(b){ return b.dateISO === opts.dateISO; });
         return computeAvailableStartTimes({
@@ -428,8 +521,31 @@ window.Ledger = (function(){
           now: new Date(),
           reservations: reservations,
           blockedSlots: blockedSlots,
-          startWindow: opts.menuConstraints && opts.menuConstraints.startWindow
+          startWindow: opts.menuConstraints && opts.menuConstraints.startWindow,
+          cfg: cfg
         });
+      });
+    },
+
+    /* 設定（通知先メール・営業時間・締切・予約可能日数）の取得。
+       未設定の項目は BOOKING_CONFIG の初期値で補完して返す。 */
+    getSettings: function(){
+      return Promise.resolve().then(function(){
+        return getEffectiveConfig();
+      });
+    },
+
+    /* 設定の更新。渡したキーのみ上書きする（部分更新）。
+       payload: { notificationEmails, businessStart, businessEnd, cutoffMin, maxAdvanceMonths } */
+    updateSettings: function(payload){
+      return Promise.resolve().then(function(){
+        var current = loadSettings();
+        var next = Object.assign({}, current, payload || {});
+        var saved = saveSettings(next);
+        if (!saved){
+          return { ok:false, error:"保存に失敗しました。" };
+        }
+        return { ok:true, settings: getEffectiveConfig() };
       });
     }
   };
@@ -439,8 +555,11 @@ window.Ledger = (function(){
     LINE_QR_SRC: LINE_QR_SRC,
     MENU_ITEMS: MENU_ITEMS,
     OPTION_ITEMS: OPTION_ITEMS,
+    CUPPING_MENU_ID: CUPPING_MENU_ID,
+    CUPPING_OPTIONS: CUPPING_OPTIONS,
 
     isStorageAvailable: isStorageAvailable,
+    getEffectiveConfig: getEffectiveConfig,
 
     sundayOf: sundayOf,
     addDays: addDays,
