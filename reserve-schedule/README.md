@@ -5,7 +5,9 @@
 
 **サロンオーナーへの確認が必要な未確定事項は `reserve-schedule/確認リスト.md` に一覧化しています。** 新しい未確定事項が出た場合も、このREADMEには書かずそちらに追記してください（内容の二重管理を避けるため）。
 
-最終更新: 2026-08-13（フェーズ①実装セッション）
+**独立レビューで見つかったバグ28件とその対応状況は `reserve-schedule/バグ報告.md` に記録しています。** 次回セッションはこのファイルも合わせて確認してください（フェーズ②へ持ち越した項目・未実施の項目が「確認できていないこと」欄含めて記載されています）。
+
+最終更新: 2026-08-13（フェーズ①バグ修正セッション。独立レビュー `バグ報告.md` の28件のうち致命的1件・重大5件・軽微12件・改善提案7件に対応。詳細は本ファイルの (D)・(E)・D1テーブル設計案、および `バグ報告.md` の各項目を参照）
 
 ---
 
@@ -153,18 +155,31 @@ raw.githack.com はGitHub上のファイルをそのままの `Content-Type` で
 - **`MENU_ITEMS`**: 本体メニュー8件（ルート `index.html` の「メニュー・料金」セクションが正データ）。
 - **`OPTION_ITEMS`**: 汎用の有料オプション（仮データ、`確認リスト.md` の項目2参照）。
 - **`CUPPING_OPTIONS`**: カッピングメニュー専用の内包オプション7件（追加料金・追加時間なし、上記(B)参照）。
-- **純粋関数群**（`computeTotalMinutes` / `computeTotalPrice` / `combineServiceWindows` / `computeAvailableStartTimes` など）: `Ledger.api` の外に置いてあり、`Ledger.api` にも呼び出し側（画面側）にも依存しない。**フェーズ②でサーバーサイド（Workers）に移植してそのまま再利用できる**ように設計している。空き判定は「予約」「手動ブロック」「カレンダー由来ブロック」を区別せず、すべて `blockedSlots` / `reservations` の時間帯重なり判定として一律に扱う。
+- **純粋関数群**（`computeTotalMinutes` / `computeTotalPrice` / `combineServiceWindows` / `computeAvailableStartTimes` / **`validateReservationPayload`** など）: `Ledger.api` の外に置いてあり、`Ledger.api` にも呼び出し側（画面側）にも依存しない。**フェーズ②でサーバーサイド（Workers）に移植してそのまま再利用できる**ように設計している。空き判定は「予約」「手動ブロック」「カレンダー由来ブロック」を区別せず、すべて `blockedSlots` / `reservations` の時間帯重なり判定として一律に扱う。
+  - **`validateReservationPayload(payload, ctx)`**（2026-08-13 独立レビュー対応で新設）: `createReservation` に渡される予約payloadを検証する純粋関数。`ctx`（`cfg` / `now` / `reservations` / `blockedSlots` / `menuItems` 等）を引数で受け取り、localStorageには一切触れない。日付形式・メニューID実在・`STEP`の倍数・`endMin>startMin`・必須顧客項目の形式と最大長を検証したうえで、**`totalMinutes`/`totalPrice`はクライアント申告値を使わず`menuIds`/`optionIds`から必ず再計算**し、さらに`computeAvailableStartTimes`を使って確定時点の現在時刻基準で「予約可能範囲・受付締切・営業時間内・時間帯制約・重複」を一括で再判定する（`code:"UNAVAILABLE"`）。フェーズ②でサーバー側（Workers）に移す際は、この関数をそのまま `import` して `POST /reservations` のハンドラ内で呼べばよい設計にしてある。
 - **`Ledger.api`**: データアクセス層。すべて `async` 関数（Promiseを返す）。現在の中身は localStorage の読み書きだが、シグネチャは最終形（fetch版）と同じになるように設計してある。
   - `getReservations({from, to})`
-  - `createReservation(payload)` — 作成前に重複チェック（予約同士・予約とブロックの重なり）を行う
-  - `cancelReservation(id)`
-  - `updateReservationContact(id, {tel, email})` — お客様が予約後に連絡先を修正するためのAPI
+  - `createReservation(payload)` — `validateReservationPayload` による検証・再計算のうえで保存する。保存直後に読み直して競合を検知する暫定緩和つき（後述）
+  - `cancelReservation(id)` — 対象が存在しない場合は `{ok:false}` を返す
+  - `updateReservationContact(id, {tel, email})` — お客様が予約後に連絡先を修正するためのAPI。データ層でも `TEL_RE`/`EMAIL_RE` による形式検証を行い、電話番号は `normalizeTel` で正規化して保存する
   - `getBlockedSlots({from, to})` — 返り値の各要素に `source`（`"manual"` | `"google-calendar"`）を含む
-  - `createBlockedSlot(payload)` / `deleteBlockedSlot(id)`
+  - `createBlockedSlot(payload)` / `deleteBlockedSlot(id)` — 対象が存在しない場合は `{ok:false}` を返す
   - `getAvailability({dateISO, totalMinutes, menuConstraints})`
-  - `getSettings()` / `updateSettings(payload)` — 通知先メール・営業時間・締切・予約可能日数
+  - `getSettings()` / `updateSettings(payload)` — 通知先メール・営業時間・締切・予約可能日数。`businessStart >= businessEnd` の場合は保存を拒否する
+  - `getStorageHealth()` / `acknowledgeStorageCorruption(target)`（2026-08-13 追加）: localStorageのJSON破損検知・手動解除用。詳細は下記「localStorage破損への対応」を参照
 
-  > **⚠ フェーズ②の作業はここだけで完結する**: `Ledger.api` オブジェクトの中身（各関数の実装）を Cloudflare Workers への `fetch()` 呼び出しに差し替えるだけでよい。呼び出し側（`index.html` / `admin.html`）は関数シグネチャを変えず `await` で呼んでいるため、画面側のコード変更は不要な設計にしてある。
+  > **⚠ フェーズ②の作業はここだけで完結する**: `Ledger.api` オブジェクトの中身（各関数の実装）を Cloudflare Workers への `fetch()` 呼び出しに差し替えるだけでよい。呼び出し側（`index.html` / `admin.html`）は関数シグネチャを変えず `await` で呼んでいるため、画面側のコード変更は不要な設計にしてある。**例外は `getReservations({})` と `getSettings()`／`updateSettings()`**: フェーズ②では認可・絞り込みをサーバー側に追加する必要があり、その分だけ呼び出し側の期待値（誰でも全件取得できてしまわないこと）が変わる。詳細は下記「フェーズ②で必ず対応すること」を参照。
+
+### localStorage破損への対応（2026-08-13 独立レビュー対応）
+
+`loadReservations` / `loadBlockedSlots` / `loadSettings` はいずれも、JSONのパースに失敗した場合を「データが空」と区別するようになっている。破損を検知すると:
+
+1. 壊れた生データを退避キー（`<key>.corrupt.<timestamp>`）にコピーして保持する（自動では消さない）。
+2. `<key>.corruptFlag` を立てる。このフラグが立っている間、該当ストアへの**保存は拒否**される（＝壊れたデータが正常なJSONで黙って上書きされることはない）。
+3. `console.error` に記録する。
+4. 管理画面 (`admin.html`) は起動時・更新時に `Ledger.api.getStorageHealth()` を呼び、破損を検知した場合は画面上部に警告バナーを表示する。バナーには「破損データを消去して再開する」ボタン（`acknowledgeStorageCorruption`）があり、壊れたキー自体を削除して空の状態から再開できる（退避コピーは残る）。
+
+これはフェーズ①（localStorage）に限定した対策であり、フェーズ②でD1に移行すればJSON破損そのものが起こらなくなるため不要になる。
 
 ### ブロックスロットの `source` フィールドとGoogleカレンダー逆方向同期への布石
 
@@ -205,6 +220,45 @@ raw.githack.com はGitHub上のファイルをそのままの `Content-Type` で
 
 ## D1 テーブル設計案（フェーズ②着手時の参考）
 
+> ### ⚠⚠⚠ 最重要: 予約INSERTは「SELECTで確認してからINSERT」の2文構成にしないこと ⚠⚠⚠
+>
+> フェーズ①には【致命的】バグとして「同時に同じ時間帯へ予約が入ると、片方のお客様に完了画面が
+> 表示されたのに予約が消滅する」という問題があった（localStorageのread-modify-writeがアトミック
+> でないため）。フェーズ①では保存直後に読み直して競合を検知する暫定緩和（`shared.js` の
+> `createReservation` を参照）でしのいでいるが、**これは緩和であり完全な解決ではない**。
+>
+> フェーズ②でこの問題を本当に解決するには、以下のいずれかを**必ず**実装すること。
+> 「重複が無いかSELECTで確認してから、別のSQL文でINSERTする」という2文構成は、2文の間に
+> 別リクエストが割り込めるため意味がない（＝localStorage版と同じ欠陥をD1でも再現してしまう）。
+>
+> 1. **推奨: 単一のINSERT文で重複を排除する。** 例（キャンセルは物理削除に統一しているため、
+>    残っている行だけを見ればよく `status` 列の条件は不要。下記「物理削除に統一する」の項を参照）:
+>    ```sql
+>    INSERT INTO reservations (id, date_iso, start_min, end_min, ...)
+>    SELECT ?, ?, ?, ?, ...
+>    WHERE NOT EXISTS (
+>      SELECT 1 FROM reservations
+>      WHERE date_iso = ?
+>        AND NOT (end_min <= ? OR start_min >= ?)  -- 時間帯が重ならない場合のみ許可
+>    );
+>    ```
+>    実行後 `changes === 0` なら「重複により作成されなかった」と判定してお客様にエラーを返す。
+>    `date_iso` + `start_min` の完全一致だけを見る一意制約（下記2）では、**開始時刻が異なる
+>    部分重複**（例: 14:00〜15:30 と 14:30〜15:00）を防げないため、これを主策とすること。
+> 2. **補助策: `UNIQUE(date_iso, start_min)` 制約も併用してよい**が、上記の理由によりこれ単体
+>    では不十分。あくまで1のSQLが万一書き間違えた場合の保険として捉えること。
+>
+> どちらの方法でも、D1（SQLite）はデフォルトで直列化されたトランザクションを提供するため、
+> 上記のような単一SQL文であれば競合を確実に防げる。
+
+キャンセルは、フェーズ①と同じ**物理削除**（該当行のDELETE）に統一する。当初案にあった
+`status` カラムによる論理削除は採用しない。理由: 論理削除に切り替えると、上記の重複チェック
+（INSERT文のWHERE NOT EXISTS）が `status = 'confirmed'` を見落とすと**キャンセル済みの枠が
+永久に予約不可になる**という別の事故を招きやすく、フェーズ①のシンプルな実装（`shared.js` の
+`cancelReservation` は配列から取り除くだけ）と挙動を揃えたほうが移行リスクが小さいと判断した。
+無断キャンセルの履歴を残したい要望が出た場合は、フェーズ②で改めて論理削除（`status`列）＋
+上記WHERE句への条件追加をセットで設計すること（`バグ報告.md`の該当項目も参照）。
+
 ```sql
 -- 予約
 CREATE TABLE reservations (
@@ -222,11 +276,12 @@ CREATE TABLE reservations (
   customer_tel    TEXT NOT NULL,
   customer_email  TEXT NOT NULL,
   customer_note   TEXT,
-  status          TEXT NOT NULL DEFAULT 'confirmed', -- 'confirmed' | 'cancelled'
   created_at      TEXT NOT NULL,
   updated_at      TEXT NOT NULL
 );
 CREATE INDEX idx_reservations_date ON reservations(date_iso);
+-- 補助策（上記⚠を参照。これ単体では部分重複を防げないため主策のSQL文とセットで使うこと）
+CREATE UNIQUE INDEX idx_reservations_date_start ON reservations(date_iso, start_min);
 
 -- 休業日・ブロック時間
 CREATE TABLE blocked_slots (
@@ -251,6 +306,31 @@ CREATE TABLE settings (
 ```
 
 ---
+
+## フェーズ②で必ず対応すること（独立レビュー `バグ報告.md` の改善提案より・コード対応は見送り）
+
+フェーズ①（localStorage・単一端末内で完結）では実害が無いが、`Ledger.api` を実際のHTTP API
+（Cloudflare Workers）に差し替えた瞬間に問題化するため、**フェーズ②の設計に必ず組み込むこと**。
+
+1. **`getReservations` の絞り込みをサーバー側に持たせること。** 現状 `index.html` の「予約の確認
+   ・変更」パネルおよび `admin.html` は `L.api.getReservations({})` で**全予約**を取得し、電話番号
+   ・メールアドレスの一致判定をクライアント側で行っている。フェーズ①ではlocalStorageが端末内で
+   完結するため実害はないが、`GET /reservations` をそのまま生やすと**全顧客の氏名・電話番号・
+   メールアドレス・ご要望が誰でも取得できるエンドポイント**になってしまう。フェーズ②では
+   `POST /reservations/lookup {tel, email | resNo}` のようにサーバー側で認証・絞り込みを行った
+   上で一致した予約だけを返す設計にすること。
+2. **管理画面 (`admin.html`) に認証を追加すること。** 現状は認証が無く、フェーズ①ではURLを
+   知られてもlocalStorageは他人からは見えないため実害が無いが、フェーズ②でサーバー化すると
+   URLを知っている誰もが全顧客の個人情報を閲覧・予約をキャンセルできる状態になる。
+   Cloudflare Access（コード変更ほぼ不要）か、Workers側でのBasic認証／セッションCookieを検討する。
+3. **予約照会（電話番号＋メールアドレス）にレート制限を検討すること。** フェーズ①の判断としては
+   現状維持で妥当（サロン予約の本人確認としては業界的にも一般的なレベル）だが、フェーズ②で
+   サーバー化すると総当たりが可能になる。IP・電話番号ごとに1分あたりの試行回数を制限する、
+   キャンセル操作のみ予約番号必須にする、変更・キャンセル時に登録メールアドレスへ通知するなど
+   （3点目はフェーズ③の通知実装と同時が効率的）を検討すること。
+4. **同時予約の競合防止をD1側で正しく実装すること。** 上記「D1 テーブル設計案」冒頭の
+   ⚠⚠⚠ 最重要 ⚠⚠⚠ を参照。フェーズ①の暫定緩和（保存直後の読み直し検証）をそのまま
+   踏襲するのではなく、単一SQL文（INSERT ... WHERE NOT EXISTS）で確実に解決すること。
 
 ## 動作確認の状況について
 
