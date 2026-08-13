@@ -166,13 +166,65 @@ window.Ledger = (function(){
   var STORAGE_BLOCKED_SLOTS = "cocosiaBooking.blockedSlots";
   var STORAGE_SETTINGS = "cocosiaBooking.settings";
 
-  function loadSettings(){
+  /* ⚠ バグ報告.md【重大】「localStorageのJSONが壊れると全予約が黙って消える」への対応。
+     パース失敗を「データが空」と区別するため、読み込み関数は { list, corrupted } を返す
+     内部形式に統一した（この2関数は外部にエクスポートしていないため、呼び出し側の変更は
+     shared.js 内の api.* だけで完結する）。
+     破損を検知した場合:
+       1) 壊れた生データを退避キー（<key>.corrupt.<timestamp>）にコピーして保持する
+       2) <key>.corruptFlag を立てる（このフラグが立っている間、該当ストアへの保存は拒否する）
+       3) console.error で記録する
+     フラグは、次回読み込み時に元のキーの中身が正常なJSONとしてパースできれば自動的に解除される
+     （手動で localStorage を修復した場合の復帰用）。それ以外に解除する手段として
+     api.acknowledgeStorageCorruption() を用意している（管理画面から呼び出す想定）。 */
+  function corruptFlagKey(key){ return key + ".corruptFlag"; }
+  function isCorruptFlagged(key){
+    try{ return localStorage.getItem(corruptFlagKey(key)) === "1"; }catch(e){ return false; }
+  }
+  function setCorruptFlag(key){
+    try{ localStorage.setItem(corruptFlagKey(key), "1"); }catch(e){ /* 何もできない */ }
+  }
+  function clearCorruptFlag(key){
+    try{ localStorage.removeItem(corruptFlagKey(key)); }catch(e){ /* 何もできない */ }
+  }
+  function quarantineCorruptData(key, raw){
     try{
-      var raw = localStorage.getItem(STORAGE_SETTINGS);
-      return raw ? JSON.parse(raw) : {};
-    }catch(e){ return {}; }
+      var qKey = key + ".corrupt." + Date.now();
+      localStorage.setItem(qKey, raw);
+      console.error("[CoCosia予約] " + key + " のデータが破損していたため退避しました: " + qKey);
+    }catch(e){
+      console.error("[CoCosia予約] " + key + " の破損データの退避に失敗しました。", e);
+    }
+  }
+  /* raw な localStorage 値を安全に読み込む共通ヘルパー。
+     戻り値: { list: 読み込めた値（破損・未保存時は defaultValue）, corrupted: boolean } */
+  function loadJSON(key, defaultValue){
+    var raw;
+    try{ raw = localStorage.getItem(key); }catch(e){ return { list: defaultValue, corrupted:false }; }
+    if (raw === null){
+      // キー自体が存在しない＝正真正銘の「空」。過去に破損フラグが残っていれば解除する。
+      clearCorruptFlag(key);
+      return { list: defaultValue, corrupted:false };
+    }
+    try{
+      var parsed = JSON.parse(raw);
+      // 正常にパースできた＝手動修復などで復旧した可能性があるのでフラグを解除する
+      clearCorruptFlag(key);
+      return { list: parsed, corrupted:false };
+    }catch(e){
+      if (!isCorruptFlagged(key)){
+        quarantineCorruptData(key, raw);
+        setCorruptFlag(key);
+      }
+      return { list: defaultValue, corrupted:true };
+    }
+  }
+
+  function loadSettings(){
+    return loadJSON(STORAGE_SETTINGS, {});
   }
   function saveSettings(settings){
+    if (isCorruptFlagged(STORAGE_SETTINGS)) return false;
     try{
       localStorage.setItem(STORAGE_SETTINGS, JSON.stringify(settings));
       return true;
@@ -181,7 +233,8 @@ window.Ledger = (function(){
   /* 管理画面「設定」で変更された値を BOOKING_CONFIG の初期値にマージして返す。
      予約ルール系のロジックは必ずこの関数経由で得た値を使うこと（BOOKING_CONFIG を直接参照しない）。 */
   function getEffectiveConfig(){
-    var saved = loadSettings();
+    var loaded = loadSettings();
+    var saved = loaded.corrupted ? {} : (loaded.list || {});
     return {
       BUSINESS_START: (typeof saved.businessStart === "number") ? saved.businessStart : BOOKING_CONFIG.BUSINESS_START,
       BUSINESS_END:   (typeof saved.businessEnd === "number") ? saved.businessEnd : BOOKING_CONFIG.BUSINESS_END,
@@ -196,24 +249,20 @@ window.Ledger = (function(){
   }
 
   function loadReservations(){
-    try{
-      var raw = localStorage.getItem(STORAGE_RESERVATIONS);
-      return raw ? JSON.parse(raw) : [];
-    }catch(e){ return []; }
+    return loadJSON(STORAGE_RESERVATIONS, []);
   }
   function saveReservations(reservations){
+    if (isCorruptFlagged(STORAGE_RESERVATIONS)) return false;
     try{
       localStorage.setItem(STORAGE_RESERVATIONS, JSON.stringify(reservations));
       return true;
     }catch(e){ return false; }
   }
   function loadBlockedSlots(){
-    try{
-      var raw = localStorage.getItem(STORAGE_BLOCKED_SLOTS);
-      return raw ? JSON.parse(raw) : [];
-    }catch(e){ return []; }
+    return loadJSON(STORAGE_BLOCKED_SLOTS, []);
   }
   function saveBlockedSlots(blockedSlots){
+    if (isCorruptFlagged(STORAGE_BLOCKED_SLOTS)) return false;
     try{
       localStorage.setItem(STORAGE_BLOCKED_SLOTS, JSON.stringify(blockedSlots));
       return true;
@@ -224,6 +273,26 @@ window.Ledger = (function(){
       var testKey = "cocosiaBooking.__test__";
       localStorage.setItem(testKey, "1");
       localStorage.removeItem(testKey);
+      return true;
+    }catch(e){ return false; }
+  }
+  /* 破損検知の状態を画面側が確認するための読み取り専用API */
+  function getStorageHealth(){
+    return {
+      reservationsCorrupted: isCorruptFlagged(STORAGE_RESERVATIONS),
+      blockedSlotsCorrupted: isCorruptFlagged(STORAGE_BLOCKED_SLOTS),
+      settingsCorrupted: isCorruptFlagged(STORAGE_SETTINGS)
+    };
+  }
+  /* 破損状態を手動で解消する（管理画面からの操作を想定）。
+     壊れたキー自体を削除して「空」の状態から再開する。退避コピー（.corrupt.<timestamp>）は残す。 */
+  function acknowledgeStorageCorruption(target){
+    var map = { reservations: STORAGE_RESERVATIONS, blockedSlots: STORAGE_BLOCKED_SLOTS, settings: STORAGE_SETTINGS };
+    var key = map[target];
+    if (!key) return false;
+    try{
+      localStorage.removeItem(key);
+      clearCorruptFlag(key);
       return true;
     }catch(e){ return false; }
   }
@@ -239,8 +308,15 @@ window.Ledger = (function(){
     r.setDate(r.getDate() + n);
     return r;
   }
+  /* n ヶ月後（前）の日付を返す。対象月に同じ日にちが存在しない場合（例: 1/31 の1ヶ月後）は
+     月末にクランプする（例: 2/28）。クランプしないと Date コンストラクタが翌月にあふれて
+     「1ヶ月後のつもりが2ヶ月後になる」バグが発生する（バグ報告.md【改善提案】対応）。
+     現在の呼び出し元は月初（1日）にしか使っていないため実害は無かったが、将来の誤用に備える。 */
   function addMonths(d, n){
-    return new Date(d.getFullYear(), d.getMonth() + n, d.getDate());
+    var targetFirst = new Date(d.getFullYear(), d.getMonth() + n, 1);
+    var daysInTargetMonth = new Date(targetFirst.getFullYear(), targetFirst.getMonth() + 1, 0).getDate();
+    var clampedDay = Math.min(d.getDate(), daysInTargetMonth);
+    return new Date(targetFirst.getFullYear(), targetFirst.getMonth(), clampedDay);
   }
   function startOfMonth(d){
     return new Date(d.getFullYear(), d.getMonth(), 1);
@@ -294,6 +370,18 @@ window.Ledger = (function(){
   function normalizeEmail(email){
     return String(email || "").trim().toLowerCase();
   }
+  /* 電話番号の正規化：全角数字→半角、数字以外（ハイフン・空白等）を除去する。
+     保存時・照会時の両方でこの関数を通すことで、ハイフンの有無に左右されず突合できる
+     （バグ報告.md【軽微】「ハイフン付きの電話番号を入れるとヒットしない」対応）。 */
+  function normalizeTel(tel){
+    var s = String(tel || "");
+    s = s.replace(/[０-９]/g, function(c){ return String.fromCharCode(c.charCodeAt(0) - 0xFEE0); });
+    return s.replace(/[^0-9]/g, "");
+  }
+  /* 画面側（index.html）と同じ形式チェック。データ層でも同じ正規表現を使えるようにここに集約する
+     （バグ報告.md【軽微】「updateReservationContact に形式検証がない」対応）。 */
+  var TEL_RE = /^0\d{9,10}$/;
+  var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   function uid(prefix){
     return prefix + Date.now() + Math.random().toString(16).slice(2);
   }
@@ -334,6 +422,13 @@ window.Ledger = (function(){
         win.max = Math.min(win.max, m.serviceWindow.max);
       }
     });
+    /* 複数メニューの時間帯制約が交差しない場合、min > max の「逆転した範囲」になる。
+       computeAvailableStartTimes は min>max でも結果的に全枠を除外するので動作上は安全だが、
+       呼び出し側が「制約が両立しない」のか「たまたま満席」なのかを区別できるよう
+       impossible フラグを立てて返す（バグ報告.md【改善提案】対応）。 */
+    if (win && win.min > win.max){
+      win.impossible = true;
+    }
     return win;
   }
   /* 予約可能な日付範囲（本日〜maxAdvanceDays 日後）のISO文字列を返す
@@ -371,6 +466,7 @@ window.Ledger = (function(){
     var mode = opts.timeWindowMode || cfg.TIME_WINDOW_MODE || TIME_WINDOW_MODE;
     var results = [];
     if (!isBookableDate(opts.dateISO, opts.now, cfg)) return results;
+    if (opts.serviceWindow && opts.serviceWindow.impossible) return results;
 
     var fullDayBlocked = (opts.blockedSlots||[]).some(function(b){
       return b.dateISO === opts.dateISO && b.allDay;
@@ -413,10 +509,187 @@ window.Ledger = (function(){
   }
 
   /* ============================================================
+     予約payloadの検証（純粋関数）
+     ------------------------------------------------------------
+     ★設計方針: この関数は Ledger.api の「外」に置き、localStorage に一切
+     触れない（必要なデータはすべて ctx 引数で受け取る）。
+     フェーズ②で Ledger.api の中身を Cloudflare Workers への fetch に
+     差し替えたとき、同じ検証コードをサーバー側（Workers）でそのまま
+     import して再利用する想定。クライアントの申告値は信用せず、
+     totalMinutes / totalPrice は menuIds / optionIds から必ずサーバー側
+     （＝この関数）で再計算する。
+
+     引数:
+       payload … 画面から渡された予約内容（クライアントの自己申告値）
+       ctx: {
+         cfg,              … getEffectiveConfig() の結果
+         now,              … 確定時点の現在時刻（Date）
+         reservations,     … 全予約（配列。関数内で dateISO により絞り込む）
+         blockedSlots,     … 全ブロック（配列。関数内で dateISO により絞り込む）
+         menuItems,        … MENU_ITEMS
+         optionItems,      … OPTION_ITEMS
+         cuppingOptions,   … CUPPING_OPTIONS
+         cuppingMenuId     … CUPPING_MENU_ID
+       }
+
+     戻り値:
+       成功時: { ok:true, normalized: { dateISO, startMin, endMin, totalMinutes,
+                 totalPrice, menuIds, optionIds, cuppingOptionIds, customer } }
+                 ※ totalMinutes/totalPrice/customer.tel は再計算・正規化済みの値。
+       失敗時: { ok:false, code: "INVALID" | "UNAVAILABLE", error: "お客様向け日本語メッセージ" }
+                 code:"UNAVAILABLE" … 日時が今はもう選べない（締切超過・満枠・範囲外等）。
+                                       画面側はこれを受けたらSTEP2に戻し、枠を再描画すること。
+                 code:"INVALID"     … データ形式そのものが不正（通常のUI操作では発生しない）。
+     ============================================================ */
+  function fail(code, message){
+    return { ok:false, code:code, error:message };
+  }
+  function validateReservationPayload(payload, ctx){
+    ctx = ctx || {};
+    var cfg = ctx.cfg || BOOKING_CONFIG;
+    var now = ctx.now || new Date();
+    var menuItems = ctx.menuItems || MENU_ITEMS;
+    var optionItems = ctx.optionItems || OPTION_ITEMS;
+    var cuppingOptions = ctx.cuppingOptions || CUPPING_OPTIONS;
+    var cuppingMenuId = ctx.cuppingMenuId || CUPPING_MENU_ID;
+
+    if (!payload || typeof payload !== "object"){
+      return fail("INVALID", "予約内容の形式が正しくありません。");
+    }
+
+    /* ---- 日付形式 ---- */
+    if (typeof payload.dateISO !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(payload.dateISO)){
+      return fail("INVALID", "日付の形式が正しくありません。");
+    }
+    var parsedDate = isoToDate(payload.dateISO);
+    if (isNaN(parsedDate.getTime()) || dateISO(parsedDate) !== payload.dateISO){
+      return fail("INVALID", "存在しない日付が指定されています。");
+    }
+
+    /* ---- メニューID の実在チェック ---- */
+    if (!Array.isArray(payload.menuIds) || payload.menuIds.length === 0){
+      return fail("INVALID", "メニューが選択されていません。");
+    }
+    var menuIds = payload.menuIds.filter(function(id, i){ return payload.menuIds.indexOf(id) === i; });
+    if (menuIds.length !== payload.menuIds.length){
+      return fail("INVALID", "メニューの指定が重複しています。");
+    }
+    var selectedMenus = [];
+    for (var mi = 0; mi < menuIds.length; mi++){
+      var menu = menuItems.filter(function(m){ return m.id === menuIds[mi]; })[0];
+      if (!menu) return fail("INVALID", "存在しないメニューが指定されています。");
+      selectedMenus.push(menu);
+    }
+
+    var optionIds = Array.isArray(payload.optionIds) ? payload.optionIds.filter(function(id, i, arr){ return arr.indexOf(id) === i; }) : [];
+    var selectedOptions = [];
+    for (var oi = 0; oi < optionIds.length; oi++){
+      var opt = optionItems.filter(function(o){ return o.id === optionIds[oi]; })[0];
+      if (!opt) return fail("INVALID", "存在しないオプションが指定されています。");
+      selectedOptions.push(opt);
+    }
+
+    var cuppingOptionIds = Array.isArray(payload.cuppingOptionIds) ? payload.cuppingOptionIds.filter(function(id, i, arr){ return arr.indexOf(id) === i; }) : [];
+    for (var ci = 0; ci < cuppingOptionIds.length; ci++){
+      var validCupping = cuppingOptions.some(function(c){ return c.id === cuppingOptionIds[ci]; });
+      if (!validCupping) return fail("INVALID", "存在しない組み合わせオプションが指定されています。");
+    }
+    if (cuppingOptionIds.length && menuIds.indexOf(cuppingMenuId) === -1){
+      return fail("INVALID", "選択されたメニューではご利用いただけない組み合わせオプションが指定されています。");
+    }
+
+    /* ---- 合計時間・合計金額はクライアント申告値を使わず、必ずここで再計算する ---- */
+    var totalMinutes = computeTotalMinutes(selectedMenus, selectedOptions);
+    var totalPrice = computeTotalPrice(selectedMenus, selectedOptions);
+
+    /* ---- 時間帯（STEPの倍数・endMin>startMin・合計時間との整合） ---- */
+    if (typeof payload.startMin !== "number" || typeof payload.endMin !== "number" ||
+        !isFinite(payload.startMin) || !isFinite(payload.endMin) ||
+        !Number.isInteger(payload.startMin) || !Number.isInteger(payload.endMin)){
+      return fail("INVALID", "時間の指定が正しくありません。");
+    }
+    if (payload.startMin < 0 || payload.startMin % cfg.STEP !== 0){
+      return fail("INVALID", "開始時刻の指定が正しくありません。");
+    }
+    if (payload.endMin <= payload.startMin){
+      return fail("INVALID", "終了時刻は開始時刻より後にしてください。");
+    }
+    if (payload.endMin - payload.startMin !== totalMinutes){
+      return fail("INVALID", "選択されたメニュー・オプションと時間の指定が一致しません。");
+    }
+
+    /* ---- 必須顧客項目の存在と形式・最大長 ---- */
+    var customer = payload.customer || {};
+    var name = typeof customer.name === "string" ? customer.name.trim() : "";
+    var kana = typeof customer.kana === "string" ? customer.kana.trim() : "";
+    var telNormalized = normalizeTel(customer.tel);
+    var email = typeof customer.email === "string" ? customer.email.trim() : "";
+    var note = typeof customer.note === "string" ? customer.note.trim() : "";
+
+    if (!name || name.length > 50) return fail("INVALID", "お名前をご確認ください（50文字以内で入力してください）。");
+    if (!kana || kana.length > 50) return fail("INVALID", "フリガナをご確認ください（50文字以内で入力してください）。");
+    if (!TEL_RE.test(telNormalized) || telNormalized.length > 20) return fail("INVALID", "電話番号をご確認ください。");
+    if (!EMAIL_RE.test(email) || email.length > 254) return fail("INVALID", "メールアドレスをご確認ください。");
+    if (note.length > 1000) return fail("INVALID", "ご要望は1000文字以内でご入力ください。");
+
+    /* ---- 時間帯制約の積集合が両立しない組み合わせ ---- */
+    var serviceWindow = combineServiceWindows(selectedMenus);
+    if (serviceWindow && serviceWindow.impossible){
+      return fail("INVALID", "選択いただいたメニューの組み合わせは、対応可能な時間帯が重ならないため恐れ入りますがご予約いただけません。");
+    }
+
+    /* ---- 予約可能範囲・受付締切・営業時間内・重複（予約/ブロック）を一括で再判定 ----
+       ここが【重大】「確定時の可用性再検証がない」への対応の中核。
+       画面を開いたまま時間が経過した場合や、締切・過去日をまたいだ場合、
+       ここで必ず今の時刻（ctx.now）を基準に再判定される。 */
+    var dayReservations = (ctx.reservations || []).filter(function(r){ return r.dateISO === payload.dateISO; });
+    var dayBlocked = (ctx.blockedSlots || []).filter(function(b){ return b.dateISO === payload.dateISO; });
+    var availableStarts = computeAvailableStartTimes({
+      dateISO: payload.dateISO,
+      totalMinutes: totalMinutes,
+      now: now,
+      reservations: dayReservations,
+      blockedSlots: dayBlocked,
+      serviceWindow: serviceWindow,
+      cfg: cfg
+    });
+    if (availableStarts.indexOf(payload.startMin) === -1){
+      return fail("UNAVAILABLE", "申し訳ございません。ただいま受付を締め切りました。恐れ入りますが別の日時をお選びください。");
+    }
+
+    return {
+      ok: true,
+      normalized: {
+        dateISO: payload.dateISO,
+        startMin: payload.startMin,
+        endMin: payload.endMin,
+        totalMinutes: totalMinutes,
+        totalPrice: totalPrice,
+        menuIds: menuIds,
+        optionIds: optionIds,
+        cuppingOptionIds: cuppingOptionIds,
+        customer: { name: name, kana: kana, tel: telNormalized, email: email, note: note }
+      }
+    };
+  }
+
+  /* ============================================================
      ⚠ フェーズ②：この api オブジェクトの中身を Cloudflare Workers への
      fetch に差し替える。呼び出し側（index.html / admin.html）は
      すべて await / .then() で呼んでいるため変更不要。
      ============================================================ */
+  /* localStorage の read-modify-write はアトミックではないため、同一オリジンの
+     複数タブから同時に呼ばれると競合しうる。navigator.locks（Web Locks API）が
+     使える環境ではそれで同一オリジン内の直列化を行い、無い環境でも壊れないように
+     素通しにする（＝下記の「保存直後の読み直し検証」だけで守る）。
+     ⚠ これはフェーズ①の暫定緩和であり、競合を完全に防止するものではない
+     （README「(D) 保留中の事項」および バグ報告.md【致命的】を参照）。 */
+  function withOptionalLock(name, fn){
+    if (typeof navigator !== "undefined" && navigator.locks && typeof navigator.locks.request === "function"){
+      return navigator.locks.request(name, fn);
+    }
+    return fn();
+  }
   function filterByRange(list, range){
     if (!range) return list.slice();
     return list.filter(function(item){
@@ -430,73 +703,141 @@ window.Ledger = (function(){
     /* 期間指定で予約取得 */
     getReservations: function(range){
       return Promise.resolve().then(function(){
-        return filterByRange(loadReservations(), range);
+        var loaded = loadReservations();
+        return filterByRange(loaded.list, range);
       });
     },
 
-    /* 予約作成。作成前に重複チェックを行い、重複していればエラーを返す */
+    /* 予約作成。validateReservationPayload で検証・再計算した上で保存する。
+       保存直後に読み直して自分のIDが残っているか・重なる他予約が混入していないかを検証する
+       （【致命的】同時予約競合への暫定緩和。README を参照。完全な解決ではない）。 */
     createReservation: function(payload){
-      return Promise.resolve().then(function(){
-        var reservations = loadReservations();
-        var blockedSlots = loadBlockedSlots();
+      return withOptionalLock("cocosiaBooking.reservations.lock", function(){
+        return Promise.resolve().then(function(){
+          var loadedRes = loadReservations();
+          var loadedBlocked = loadBlockedSlots();
+          if (loadedRes.corrupted || loadedBlocked.corrupted){
+            return { ok:false, code:"STORAGE_CORRUPTED", error:"保存されているデータを正しく読み取れませんでした。安全のため新規のご予約を一時的に停止しております。お手数ですがお電話（" + BOOKING_CONFIG.TEL + "）にてご連絡ください。" };
+          }
 
-        var conflict =
-          reservations.some(function(r){
-            return r.dateISO === payload.dateISO && overlaps(payload.startMin, payload.endMin, r.startMin, r.endMin);
-          }) ||
-          blockedSlots.some(function(b){
-            if (b.dateISO !== payload.dateISO) return false;
-            if (b.allDay) return true;
-            return overlaps(payload.startMin, payload.endMin, b.startMin, b.endMin);
+          var cfg = getEffectiveConfig();
+          var check = validateReservationPayload(payload, {
+            cfg: cfg,
+            now: new Date(),
+            reservations: loadedRes.list,
+            blockedSlots: loadedBlocked.list,
+            menuItems: MENU_ITEMS,
+            optionItems: OPTION_ITEMS,
+            cuppingOptions: CUPPING_OPTIONS,
+            cuppingMenuId: CUPPING_MENU_ID
           });
+          if (!check.ok) return check;
 
-        if (conflict){
-          return { ok:false, error:"申し訳ございません。この時間帯はすでに予約またはブロックされています。お手数ですが別の時間をお選びください。" };
-        }
+          var normalized = check.normalized;
+          var reservations = loadedRes.list;
 
-        var reservation = Object.assign({
-          id: uid("r"),
-          createdAt: new Date().toISOString()
-        }, payload);
+          // validateReservationPayload 内でも重複判定は行っているが、明示的な文言のためここでも判定する
+          var conflict = reservations.some(function(r){
+            return r.dateISO === normalized.dateISO && overlaps(normalized.startMin, normalized.endMin, r.startMin, r.endMin);
+          });
+          if (conflict){
+            return { ok:false, code:"UNAVAILABLE", error:"申し訳ございません。この時間帯はすでに予約またはブロックされています。お手数ですが別の時間をお選びください。" };
+          }
 
-        reservations.push(reservation);
-        var saved = saveReservations(reservations);
-        if (!saved){
-          return { ok:false, error:"保存に失敗しました。ブラウザの設定をご確認のうえ、もう一度お試しください。" };
-        }
-        return { ok:true, reservation: reservation };
+          var reservation = Object.assign({
+            id: uid("r"),
+            createdAt: new Date().toISOString()
+          }, normalized);
+
+          reservations.push(reservation);
+          var saved = saveReservations(reservations);
+          if (!saved){
+            return { ok:false, error:"保存に失敗しました。ブラウザの設定をご確認のうえ、もう一度お試しください。" };
+          }
+
+          /* ---- 致命的バグ「同時予約で片方が消滅する」への暫定緩和 ----
+             localStorage の read-modify-write はアトミックではないため、同一オリジンの別タブ/別窓
+             から同時に同じ時間帯へ確定されると、後勝ちの書き込みでどちらかの予約が消えることがある
+             （フェーズ①の構造的な限界。navigator.locks が使える環境では上の withOptionalLock で
+             直列化されるが、使えない環境でも壊れないよう、保存直後にもう一度読み直して確認する）。
+             ⚠ これは緩和であり、競合を完全に防止するものではない。完全な解決はフェーズ②で
+             D1のユニーク制約または「重なる行が無いことを条件にした単一のINSERT文」によって行う
+             （README の D1 テーブル設計案を参照）。 */
+          var verify = loadReservations();
+          if (verify.corrupted){
+            return { ok:false, error:"ご予約の保存後の確認に失敗しました。恐れ入りますが、ご予約が完了しているか店舗までお電話にてご確認ください。" };
+          }
+          var stillThere = verify.list.some(function(r){ return r.id === reservation.id; });
+          var overlapCount = verify.list.filter(function(r){
+            return r.id !== reservation.id && r.dateISO === reservation.dateISO && overlaps(reservation.startMin, reservation.endMin, r.startMin, r.endMin);
+          }).length;
+          if (!stillThere || overlapCount > 0){
+            // 競合を検出。安全側に倒し、この呼び出し分の予約だけを取り除いてエラーを返す
+            // （相手側の予約が存在する場合はそちらには触れない）。
+            var recovered = verify.list.filter(function(r){ return r.id !== reservation.id; });
+            saveReservations(recovered);
+            return { ok:false, code:"CONFLICT", error:"混雑によりご予約の確定を完了できませんでした。恐れ入りますが、少し時間をおいて「予約の確認・変更」からご予約状況をご確認いただくか、最初からもう一度お試しください。" };
+          }
+
+          return { ok:true, reservation: reservation };
+        });
       });
     },
 
-    /* 予約キャンセル */
+    /* 予約キャンセル。対象が存在しない場合は ok:false を返す */
     cancelReservation: function(id){
       return Promise.resolve().then(function(){
-        var reservations = loadReservations();
+        var loaded = loadReservations();
+        if (loaded.corrupted){
+          return { ok:false, error:"予約データを正しく読み取れませんでした。恐れ入りますが店舗までお電話にてご連絡ください。" };
+        }
+        var reservations = loaded.list;
+        var exists = reservations.some(function(r){ return r.id === id; });
+        if (!exists){
+          return { ok:false, error:"該当する予約が見つかりませんでした。すでにキャンセル済みの可能性があります。" };
+        }
         var next = reservations.filter(function(r){ return r.id !== id; });
         var saved = saveReservations(next);
-        return { ok: saved };
+        if (!saved){
+          return { ok:false, error:"保存に失敗しました。" };
+        }
+        return { ok:true };
       });
     },
 
     /* お客様が予約後に連絡先（電話・メール）を修正する。
-       呼び出し側で本人確認（予約番号＋電話番号の一致など）を行ってから呼ぶこと。 */
+       呼び出し側で本人確認（予約番号＋電話番号の一致など）を行ってから呼ぶこと。
+       データ層でも TEL_RE / EMAIL_RE による形式検証を行う。電話番号は normalizeTel で正規化して保存する。 */
     updateReservationContact: function(id, contact){
       return Promise.resolve().then(function(){
-        var reservations = loadReservations();
-        var target = null;
-        var next = reservations.map(function(r){
-          if (r.id !== id) return r;
-          target = Object.assign({}, r, {
-            customer: Object.assign({}, r.customer, {
-              tel: (contact && typeof contact.tel === "string" && contact.tel.trim()) ? contact.tel.trim() : r.customer.tel,
-              email: (contact && typeof contact.email === "string" && contact.email.trim()) ? contact.email.trim() : r.customer.email
-            })
-          });
-          return target;
-        });
-        if (!target){
+        var loaded = loadReservations();
+        if (loaded.corrupted){
+          return { ok:false, error:"予約データを正しく読み取れませんでした。恐れ入りますが店舗までお電話にてご連絡ください。" };
+        }
+        var reservations = loaded.list;
+        var idx = -1;
+        reservations.some(function(r, i){ if (r.id === id){ idx = i; return true; } return false; });
+        if (idx === -1){
           return { ok:false, error:"該当する予約が見つかりませんでした。" };
         }
+        var current = reservations[idx];
+        var hasTel = contact && typeof contact.tel === "string" && contact.tel.trim();
+        var hasEmail = contact && typeof contact.email === "string" && contact.email.trim();
+        var newTel = hasTel ? normalizeTel(contact.tel) : current.customer.tel;
+        var newEmail = hasEmail ? contact.email.trim() : current.customer.email;
+
+        if (hasTel && (!TEL_RE.test(newTel) || newTel.length > 20)){
+          return { ok:false, error:"電話番号の形式が正しくありません。" };
+        }
+        if (hasEmail && (!EMAIL_RE.test(newEmail) || newEmail.length > 254)){
+          return { ok:false, error:"メールアドレスの形式が正しくありません。" };
+        }
+
+        var target = Object.assign({}, current, {
+          customer: Object.assign({}, current.customer, { tel: newTel, email: newEmail })
+        });
+        var next = reservations.slice();
+        next[idx] = target;
         var saved = saveReservations(next);
         if (!saved){
           return { ok:false, error:"保存に失敗しました。" };
@@ -508,7 +849,8 @@ window.Ledger = (function(){
     /* 休業日・ブロック時間の取得（期間指定）。各要素に source（'manual'|'google-calendar'）を含む */
     getBlockedSlots: function(range){
       return Promise.resolve().then(function(){
-        return filterByRange(loadBlockedSlots(), range);
+        var loaded = loadBlockedSlots();
+        return filterByRange(loaded.list, range);
       });
     },
 
@@ -516,7 +858,11 @@ window.Ledger = (function(){
        'google-calendar' はフェーズ③でカレンダー同期処理から呼ばれる想定。 */
     createBlockedSlot: function(payload){
       return Promise.resolve().then(function(){
-        var blockedSlots = loadBlockedSlots();
+        var loaded = loadBlockedSlots();
+        if (loaded.corrupted){
+          return { ok:false, error:"ブロックデータを正しく読み取れませんでした。安全のため保存を停止しています。" };
+        }
+        var blockedSlots = loaded.list;
         var slot = Object.assign({ id: uid("b"), source: "manual" }, payload);
         blockedSlots.push(slot);
         var saved = saveBlockedSlots(blockedSlots);
@@ -527,19 +873,29 @@ window.Ledger = (function(){
       });
     },
 
-    /* 休業日・ブロック時間の削除。
+    /* 休業日・ブロック時間の削除。対象が存在しない場合は ok:false を返す。
        source が 'google-calendar' のものは次回同期で復活してしまうため削除を拒否する
        （カレンダー側の予定を削除する運用を想定。フェーズ③実装時に自動再削除ロジックへ差し替え可）。 */
     deleteBlockedSlot: function(id){
       return Promise.resolve().then(function(){
-        var blockedSlots = loadBlockedSlots();
+        var loaded = loadBlockedSlots();
+        if (loaded.corrupted){
+          return { ok:false, error:"ブロックデータを正しく読み取れませんでした。恐れ入りますが管理者にご連絡ください。" };
+        }
+        var blockedSlots = loaded.list;
         var target = blockedSlots.filter(function(b){ return b.id === id; })[0];
-        if (target && target.source === "google-calendar"){
+        if (!target){
+          return { ok:false, error:"該当する休業日・ブロックが見つかりませんでした。すでに削除済みの可能性があります。" };
+        }
+        if (target.source === "google-calendar"){
           return { ok:false, error:"Googleカレンダー由来のブロックは削除できません。カレンダー側の予定を削除してください。" };
         }
         var next = blockedSlots.filter(function(b){ return b.id !== id; });
         var saved = saveBlockedSlots(next);
-        return { ok: saved };
+        if (!saved){
+          return { ok:false, error:"保存に失敗しました。" };
+        }
+        return { ok:true };
       });
     },
 
@@ -548,8 +904,10 @@ window.Ledger = (function(){
     getAvailability: function(opts){
       return Promise.resolve().then(function(){
         var cfg = getEffectiveConfig();
-        var reservations = loadReservations().filter(function(r){ return r.dateISO === opts.dateISO; });
-        var blockedSlots = loadBlockedSlots().filter(function(b){ return b.dateISO === opts.dateISO; });
+        var loadedRes = loadReservations();
+        var loadedBlocked = loadBlockedSlots();
+        var reservations = (loadedRes.corrupted ? [] : loadedRes.list).filter(function(r){ return r.dateISO === opts.dateISO; });
+        var blockedSlots = (loadedBlocked.corrupted ? [] : loadedBlocked.list).filter(function(b){ return b.dateISO === opts.dateISO; });
         return computeAvailableStartTimes({
           dateISO: opts.dateISO,
           totalMinutes: opts.totalMinutes,
@@ -571,16 +929,41 @@ window.Ledger = (function(){
     },
 
     /* 設定の更新。渡したキーのみ上書きする（部分更新）。
-       payload: { notificationEmails, businessStart, businessEnd, cutoffMin, maxAdvanceDays } */
+       payload: { notificationEmails, businessStart, businessEnd, cutoffMin, maxAdvanceDays }
+       営業開始 >= 営業終了 の場合は保存を拒否する（【重大】予約システム全体が停止するバグへの対応）。 */
     updateSettings: function(payload){
       return Promise.resolve().then(function(){
-        var current = loadSettings();
+        var loaded = loadSettings();
+        if (loaded.corrupted){
+          return { ok:false, error:"設定データを正しく読み取れませんでした。安全のため保存を停止しています。" };
+        }
+        var current = loaded.list || {};
         var next = Object.assign({}, current, payload || {});
+        var effStart = (typeof next.businessStart === "number") ? next.businessStart : BOOKING_CONFIG.BUSINESS_START;
+        var effEnd = (typeof next.businessEnd === "number") ? next.businessEnd : BOOKING_CONFIG.BUSINESS_END;
+        if (effStart >= effEnd){
+          return { ok:false, error:"営業終了時刻は営業開始時刻より後にしてください。" };
+        }
         var saved = saveSettings(next);
         if (!saved){
           return { ok:false, error:"保存に失敗しました。" };
         }
         return { ok:true, settings: getEffectiveConfig() };
+      });
+    },
+
+    /* localStorage破損の検知状況を返す（画面側の警告表示用） */
+    getStorageHealth: function(){
+      return Promise.resolve().then(function(){
+        return getStorageHealth();
+      });
+    },
+
+    /* 破損状態を手動で解消する（管理画面からの操作を想定）。target: 'reservations'|'blockedSlots'|'settings' */
+    acknowledgeStorageCorruption: function(target){
+      return Promise.resolve().then(function(){
+        var done = acknowledgeStorageCorruption(target);
+        return done ? { ok:true } : { ok:false, error:"解除に失敗しました。" };
       });
     }
   };
@@ -612,6 +995,9 @@ window.Ledger = (function(){
 
     escapeHtml: escapeHtml,
     normalizeEmail: normalizeEmail,
+    normalizeTel: normalizeTel,
+    TEL_RE: TEL_RE,
+    EMAIL_RE: EMAIL_RE,
 
     overlaps: overlaps,
     computeTotalMinutes: computeTotalMinutes,
@@ -621,6 +1007,7 @@ window.Ledger = (function(){
     bookableRange: bookableRange,
     isBookableDate: isBookableDate,
     computeAvailableStartTimes: computeAvailableStartTimes,
+    validateReservationPayload: validateReservationPayload,
 
     api: api
   };
