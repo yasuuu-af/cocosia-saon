@@ -485,17 +485,52 @@
   /* ---------- Lookup / edit panel ---------- */
   .lookup-panel{ display:none; padding:20px 0 40px; }
   .lookup-panel.active{ display:block; }
-  .lookup-result{
+  .lookup-or{ text-align:center; font-size:0.74rem; color:var(--text-light); margin:-2px 0 14px; }
+  .lookup-result{ margin-top:16px; display:flex; flex-direction:column; gap:14px; }
+  .lookup-msg-box{
     background:#fff;
     border:1px solid var(--sand);
     border-radius:10px;
     padding:16px;
-    margin-top:16px;
   }
-  .lookup-result .msg{ font-size:0.82rem; color:var(--text-mid); }
-  .lookup-result.error .msg{ color:var(--danger); }
+  .lookup-msg-box .msg{ font-size:0.82rem; color:var(--text-mid); }
+  .lookup-result.error .lookup-msg-box .msg{ color:var(--danger); }
+  .lookup-card{
+    background:#fff;
+    border:1px solid var(--sand);
+    border-radius:10px;
+    padding:16px;
+  }
   .save-msg{ font-size:0.78rem; color:var(--sage); margin-top:6px; display:none; }
   .save-msg.show{ display:block; }
+  .cancel-today-note{
+    background:var(--danger-tint);
+    color:var(--danger);
+    border-radius:8px;
+    padding:11px 13px;
+    font-size:0.76rem;
+    margin:14px 0 8px;
+  }
+  .cancel-today-note a{ color:var(--danger); font-weight:600; text-decoration:underline; white-space:nowrap; }
+  .btn-cancel{
+    width:100%;
+    border:1px solid var(--danger);
+    color:var(--danger);
+    background:#fff;
+    border-radius:6px;
+    padding:11px;
+    font-size:0.85rem;
+    cursor:pointer;
+    margin-top:6px;
+  }
+  .btn-cancel:hover{ background:var(--danger-tint); }
+  .btn-cancel:disabled{
+    opacity:0.6;
+    cursor:not-allowed;
+    border-color:var(--taupe);
+    color:var(--text-light);
+    background:var(--cream);
+  }
 
   /* ---------- Toast ---------- */
   .toast{
@@ -676,15 +711,20 @@
 <!-- 予約の確認・変更パネル -->
 <main class="wrap lookup-panel" id="lookupPanel">
   <h2 class="step-title">予約の確認・変更</h2>
-  <p class="step-sub">予約番号とご予約時のお電話番号を入力すると、電話番号・メールアドレスを修正できます。</p>
+  <p class="step-sub">お電話番号は必須です。予約番号がお手元にある場合はそちらを、お手元にない場合はメールアドレスをあわせてご入力ください。本日以降のご予約のみ表示されます。</p>
   <form id="lookupForm">
-    <div class="field">
-      <label for="lookupResNo">予約番号<span class="req">必須</span></label>
-      <input type="text" id="lookupResNo" autocomplete="off" placeholder="予約完了画面に表示された番号">
-    </div>
     <div class="field">
       <label for="lookupTel">お電話番号<span class="req">必須</span></label>
       <input type="tel" id="lookupTel" autocomplete="tel" inputmode="numeric" placeholder="ご予約時に入力した電話番号">
+    </div>
+    <div class="field">
+      <label for="lookupResNo">予約番号（お持ちの場合）</label>
+      <input type="text" id="lookupResNo" autocomplete="off" placeholder="予約完了画面に表示された番号">
+    </div>
+    <p class="lookup-or">または</p>
+    <div class="field">
+      <label for="lookupEmail">メールアドレス</label>
+      <input type="email" id="lookupEmail" autocomplete="email" placeholder="ご予約時に入力したメールアドレス">
     </div>
     <button type="submit" class="btn btn-primary" style="width:100%;">確認する</button>
   </form>
@@ -742,7 +782,7 @@
   }
   function totalMinutes(){ return L.computeTotalMinutes(selectedMenus(), selectedOptions()); }
   function totalPrice(){ return L.computeTotalPrice(selectedMenus(), selectedOptions()); }
-  function currentStartWindow(){ return L.combineStartWindows(selectedMenus()); }
+  function currentServiceWindow(){ return L.combineServiceWindows(selectedMenus()); }
 
   /* ================= Step indicator / bottom bar ================= */
   var stepIndicator = document.getElementById("stepIndicator");
@@ -960,7 +1000,7 @@
     L.api.getAvailability({
       dateISO: dISO,
       totalMinutes: totalMinutes(),
-      menuConstraints: { startWindow: currentStartWindow() }
+      menuConstraints: { serviceWindow: currentServiceWindow() }
     }).then(function(starts){
       timeGrid.innerHTML = "";
       if (!starts.length){
@@ -1165,6 +1205,7 @@
   var lookupForm = document.getElementById("lookupForm");
   var lookupResNo = document.getElementById("lookupResNo");
   var lookupTel = document.getElementById("lookupTel");
+  var lookupEmail = document.getElementById("lookupEmail");
   var lookupResult = document.getElementById("lookupResult");
 
   document.getElementById("openLookupBtn").addEventListener("click", function(e){
@@ -1181,59 +1222,121 @@
     renderBottomBar();
   });
 
+  function showLookupMessage(msg, isError){
+    lookupResult.className = "lookup-result" + (isError ? " error" : "");
+    lookupResult.style.display = "block";
+    lookupResult.innerHTML = '<div class="lookup-msg-box"><p class="msg">' + L.escapeHtml(msg) + '</p></div>';
+  }
+
   lookupForm.addEventListener("submit", function(e){
     e.preventDefault();
-    var resNo = lookupResNo.value.trim();
     var tel = lookupTel.value.trim();
-    lookupResult.className = "lookup-result";
-    lookupResult.style.display = "block";
-    lookupResult.innerHTML = '<p class="msg">確認中…</p>';
+    var resNo = lookupResNo.value.trim();
+    var email = lookupEmail.value.trim();
+
+    if (!tel){
+      showLookupMessage("お電話番号を入力してください。", true);
+      return;
+    }
+    if (!resNo && !email){
+      showLookupMessage("予約番号、またはメールアドレスのいずれかを入力してください。", true);
+      return;
+    }
+    showLookupMessage("確認中…", false);
 
     L.api.getReservations({}).then(function(all){
-      var found = all.filter(function(r){
-        return r.id === resNo && r.customer && r.customer.tel === tel;
-      })[0];
-      if (!found){
-        lookupResult.classList.add("error");
-        lookupResult.innerHTML = '<p class="msg">予約番号または電話番号が一致する予約が見つかりませんでした。入力内容をご確認ください。</p>';
+      var todayISO = L.dateISO(new Date());
+      var matches;
+      if (resNo){
+        matches = all.filter(function(r){ return r.customer && r.id === resNo && r.customer.tel === tel; });
+      } else {
+        var emailNorm = L.normalizeEmail(email);
+        matches = all.filter(function(r){ return r.customer && r.customer.tel === tel && L.normalizeEmail(r.customer.email) === emailNorm; });
+      }
+      // 過去の予約は照会結果に含めない（今日以降のみ）
+      matches = matches.filter(function(r){ return r.dateISO >= todayISO; })
+        .sort(function(a,b){
+          if (a.dateISO !== b.dateISO) return a.dateISO < b.dateISO ? -1 : 1;
+          return a.startMin - b.startMin;
+        });
+
+      if (!matches.length){
+        showLookupMessage("条件に一致する、本日以降のご予約が見つかりませんでした。入力内容をご確認ください（過去のご予約は表示されません）。", true);
         return;
       }
-      renderLookupResult(found);
+      renderLookupResults(matches);
     });
   });
 
-  function renderLookupResult(reservation){
-    var d = L.isoToDate(reservation.dateISO);
-    lookupResult.innerHTML =
-      '<div class="confirm-row"><span class="k">予約番号</span><span class="v">' + L.escapeHtml(reservation.id) + '</span></div>' +
-      '<div class="confirm-row"><span class="k">日時</span><span class="v">' + L.fmtFullDate(d) + " " + L.minutesToLabel(reservation.startMin) + '〜' + L.minutesToLabel(reservation.endMin) + '</span></div>' +
-      '<div class="confirm-row"><span class="k">お名前</span><span class="v">' + L.escapeHtml(reservation.customer.name) + ' 様</span></div>' +
-      '<div class="field" style="margin-top:14px;">' +
-        '<label for="editTel">電話番号</label>' +
-        '<input type="tel" id="editTel" value="' + L.escapeHtml(reservation.customer.tel) + '" inputmode="numeric">' +
-      '</div>' +
-      '<div class="field">' +
-        '<label for="editEmail">メールアドレス</label>' +
-        '<input type="email" id="editEmail" value="' + L.escapeHtml(reservation.customer.email) + '">' +
-      '</div>' +
-      '<button type="button" class="btn btn-primary" id="saveContactBtn" style="width:100%;">連絡先を保存する</button>' +
-      '<p class="save-msg" id="saveMsg">連絡先を更新しました。</p>';
+  function renderLookupResults(list){
+    var todayISO = L.dateISO(new Date());
+    lookupResult.className = "lookup-result";
+    lookupResult.style.display = "block";
+    lookupResult.innerHTML = list.map(function(r){
+      var d = L.isoToDate(r.dateISO);
+      var isToday = r.dateISO === todayISO;
+      var telHref = "tel:" + CFG.TEL.replace(/-/g, "");
+      return '<div class="lookup-card" data-res-id="' + L.escapeHtml(r.id) + '">' +
+        '<div class="confirm-row"><span class="k">予約番号</span><span class="v">' + L.escapeHtml(r.id) + '</span></div>' +
+        '<div class="confirm-row"><span class="k">日時</span><span class="v">' + L.fmtFullDate(d) + " " + L.minutesToLabel(r.startMin) + '〜' + L.minutesToLabel(r.endMin) + '</span></div>' +
+        '<div class="confirm-row"><span class="k">お名前</span><span class="v">' + L.escapeHtml(r.customer.name) + ' 様</span></div>' +
+        '<div class="field" style="margin-top:14px;">' +
+          '<label>電話番号</label>' +
+          '<input type="tel" class="edit-tel" value="' + L.escapeHtml(r.customer.tel) + '" inputmode="numeric">' +
+        '</div>' +
+        '<div class="field">' +
+          '<label>メールアドレス</label>' +
+          '<input type="email" class="edit-email" value="' + L.escapeHtml(r.customer.email) + '">' +
+        '</div>' +
+        '<button type="button" class="btn btn-primary save-contact-btn" style="width:100%;">連絡先を保存する</button>' +
+        '<p class="save-msg">連絡先を更新しました。</p>' +
+        (isToday ?
+          ('<div class="cancel-today-note">当日のキャンセルは、施術料金の100%を申し受けます。お手数ですが、お電話（<a href="' + telHref + '">' + L.escapeHtml(CFG.TEL) + '</a>）にてご連絡ください。</div>' +
+           '<button type="button" class="btn-cancel" disabled>本日のご予約はお電話でのみキャンセルできます</button>')
+          :
+          '<button type="button" class="btn-cancel cancel-res-btn">この予約をキャンセルする</button>'
+        ) +
+      '</div>';
+    }).join("");
 
-    document.getElementById("saveContactBtn").addEventListener("click", function(){
-      var newTel = document.getElementById("editTel").value.trim();
-      var newEmail = document.getElementById("editEmail").value.trim();
-      if (!TEL_RE.test(newTel) || !EMAIL_RE.test(newEmail)){
-        showToast("電話番号・メールアドレスの形式をご確認ください");
-        return;
-      }
-      L.api.updateReservationContact(reservation.id, { tel:newTel, email:newEmail }).then(function(res){
-        if (res.ok){
-          document.getElementById("saveMsg").classList.add("show");
-          showToast("連絡先を更新しました");
-        } else {
-          showToast(res.error || "更新に失敗しました");
+    Array.prototype.forEach.call(lookupResult.querySelectorAll(".lookup-card"), function(card){
+      var id = card.getAttribute("data-res-id");
+      var saveBtn = card.querySelector(".save-contact-btn");
+      var saveMsg = card.querySelector(".save-msg");
+      saveBtn.addEventListener("click", function(){
+        var newTel = card.querySelector(".edit-tel").value.trim();
+        var newEmail = card.querySelector(".edit-email").value.trim();
+        if (!TEL_RE.test(newTel) || !EMAIL_RE.test(newEmail)){
+          showToast("電話番号・メールアドレスの形式をご確認ください");
+          return;
         }
+        L.api.updateReservationContact(id, { tel:newTel, email:newEmail }).then(function(res){
+          if (res.ok){
+            saveMsg.classList.add("show");
+            showToast("連絡先を更新しました");
+          } else {
+            showToast(res.error || "更新に失敗しました");
+          }
+        });
       });
+
+      var cancelBtn = card.querySelector(".cancel-res-btn");
+      if (cancelBtn){
+        cancelBtn.addEventListener("click", function(){
+          if (!window.confirm("本当にこの予約をキャンセルしますか？\nこの操作は取り消せません。")) return;
+          L.api.cancelReservation(id).then(function(res){
+            if (res.ok){
+              showToast("予約をキャンセルしました");
+              card.parentNode.removeChild(card);
+              if (!lookupResult.querySelector(".lookup-card")){
+                showLookupMessage("表示できるご予約がなくなりました。", false);
+              }
+            } else {
+              showToast("キャンセルに失敗しました");
+            }
+          });
+        });
+      }
     });
   }
 
