@@ -44,6 +44,7 @@
 ├── blog-hikan.html                # 記事: 本格火罐（ひかん）ってどんな施術？
 ├── blog-katakori-stretch.html     # 記事: デスクワークの肩こりを和らげる、3分ストレッチ
 ├── blog-line-yoyaku.html          # 記事: LINEでのご予約をはじめました
+├── tol-menu-list.md               # TOL予約システム登録用メニュー・オプション一覧（オプション価格は仮）
 ├── 最新版HP/                       # 公開中サイトの凍結スナップショット（参照専用・直接編集禁止）
 │   ├── index.html
 │   ├── blog.html
