@@ -38,13 +38,13 @@ LINE の規定は「幅2500px・容量1MB以下・JPG/PNG」なので条件を�
 | --- | --- | --- | --- |
 | **A**（左上） | ご予約 / RESERVE | リンク | `https://tol-app.jp/s/vci08tspdhggsu8a0ooe` |
 | **B**（中央上） | メニュー・料金 / MENU | リンク | `https://cocosia.relaxation-salon.workers.dev/#menu` |
-| **C**（右上） | 初めての方へ / ABOUT | リンク | `https://cocosia.relaxation-salon.workers.dev/#about` |
+| **C**（右上） | X / TWITTER | リンク | `https://x.com/gmjfx3mpi3yfflg` |
 | **D**（左下） | アクセス / ACCESS | リンク | `https://www.google.com/maps?cid=11824116614626448226` |
 | **E**（中央下） | お電話 / TEL | リンク | `tel:08055239301` |
 | **F**（右下） | Instagram / PHOTO | リンク | `https://www.instagram.com/cocosia.kitasenju` |
 
 各エリアには「アクションラベル」も入力できる。音声読み上げ用なので、画像の表示と同じ文言
-（`ご予約` `メニュー・料金` `初めての方へ` `アクセス` `お電話` `Instagram`）を入れておく。
+（`ご予約` `メニュー・料金` `X` `アクセス` `お電話` `Instagram`）を入れておく。
 
 > **エリアE（お電話）の注意**
 > 管理画面のリンク欄が `tel:` を受け付けない場合がある。その場合は代わりに
