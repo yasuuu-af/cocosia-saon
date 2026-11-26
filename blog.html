@@ -75,6 +75,28 @@
     transition: color 0.3s;
   }
   .nav-links a:hover { color: var(--clay); }
+  /* スマホ用ナビ開閉ボタン（PCでは非表示） */
+  .nav-toggle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    margin-right: -0.6rem;
+    padding: 0;
+    background: none;
+    border: none;
+    color: var(--bark);
+    cursor: pointer;
+  }
+  .nav-toggle-dots {
+    display: block;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 -7px 0 currentColor, 0 7px 0 currentColor;
+  }
   .nav-reserve {
     background: var(--earth);
     color: white !important;
@@ -384,7 +406,35 @@
 
   @media (max-width: 768px) {
     nav { padding: 1rem 1.2rem; }
-    .nav-links { display: none; }
+    .nav-toggle { display: flex; }
+    .nav-links {
+      display: none;
+      position: absolute;
+      top: 100%; right: 0.8rem;
+      min-width: 15rem;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0;
+      padding: 0.4rem 0;
+      background: var(--cream);
+      border: 1px solid var(--sand);
+      border-radius: 0 0 4px 4px;
+      box-shadow: 0 8px 24px rgba(74,48,32,0.12);
+    }
+    nav.is-open .nav-links { display: flex; }
+    .nav-links a {
+      display: flex;
+      align-items: center;
+      min-height: 44px;
+      padding: 0 1.2rem;
+      font-size: 0.9rem;
+    }
+    .nav-links a.nav-reserve {
+      justify-content: center;
+      margin: 0.4rem 1rem 0.6rem;
+      padding: 0 1rem;
+      font-size: 0.9rem !important;
+    }
     .page-head { padding: 7rem 1.2rem 3rem; }
     .blog-section { padding: 3rem 1.2rem 4rem; }
     .mobile-bar { display: flex; }
@@ -429,7 +479,7 @@
 
 <nav>
   <a href="index.html" class="nav-logo">Co<span>Co</span>sia</a>
-  <ul class="nav-links">
+  <ul class="nav-links" id="nav-menu">
     <li><a href="index.html#about">サロンについて</a></li>
     <li><a href="index.html#menu">メニュー</a></li>
     <li><a href="index.html#features">こだわり</a></li>
@@ -438,6 +488,7 @@
     <li><a href="index.html#info">アクセス</a></li>
     <li><a href="index.html#reserve" class="nav-reserve">予約する</a></li>
   </ul>
+  <button type="button" class="nav-toggle" aria-label="メニューを開く" aria-expanded="false" aria-controls="nav-menu"><span class="nav-toggle-dots" aria-hidden="true"></span></button>
 </nav>
 
 <header class="page-head">
@@ -587,6 +638,32 @@
         });
         empty.style.display = shown === 0 ? 'block' : 'none';
       });
+    });
+  })();
+</script>
+<script>
+  /* スマホ用ナビ（⋮）の開閉 */
+  (function () {
+    var nav = document.querySelector('nav');
+    var btn = nav && nav.querySelector('.nav-toggle');
+    if (!btn) return;
+    function setOpen(open) {
+      nav.classList.toggle('is-open', open);
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      btn.setAttribute('aria-label', open ? 'メニューを閉じる' : 'メニューを開く');
+    }
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      setOpen(!nav.classList.contains('is-open'));
+    });
+    nav.querySelectorAll('.nav-links a').forEach(function (a) {
+      a.addEventListener('click', function () { setOpen(false); });
+    });
+    document.addEventListener('click', function (e) {
+      if (!nav.contains(e.target)) setOpen(false);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') setOpen(false);
     });
   })();
 </script>
