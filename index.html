@@ -767,6 +767,25 @@
     color: var(--text-light);
     letter-spacing: 0.08em;
   }
+  /* FAQ */
+  .faq-section { background: var(--cream); }
+  .faq-inner { max-width: 760px; margin: 0 auto; }
+  .faq-item { border-bottom: 1px solid var(--sand); padding: 1.2rem 0; }
+  .faq-item dt {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 0.95rem;
+    letter-spacing: 0.08em;
+    color: var(--bark);
+    line-height: 1.7;
+    margin-bottom: 0.5rem;
+  }
+  .faq-item dd {
+    font-size: 0.82rem;
+    color: var(--text-mid);
+    line-height: 1.9;
+    overflow-wrap: anywhere;
+  }
+  .faq-item dd a { color: var(--clay); }
   /* INFO */
   .info-section { background: var(--warm-white); }
   .info-inner {
@@ -1093,8 +1112,8 @@
   },
   "geo": {
     "@type": "GeoCoordinates",
-    "latitude": 35.74879307256563,
-    "longitude": 139.80545397635717
+    "latitude": 35.7488334,
+    "longitude": 139.8080235
   },
   "openingHoursSpecification": [{
     "@type": "OpeningHoursSpecification",
@@ -1110,8 +1129,105 @@
   "sameAs": [
     "https://www.instagram.com/cocosia.kitasenju",
     "https://x.com/gmjfx3mpi3yfflg",
-    "https://www.google.com/maps?cid=11824116614626448226"
+    "https://www.google.com/maps?cid=11824116614626448226",
+    "https://page.line.me/756assva"
   ],
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "メニュー・料金",
+    "itemListElement": [
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "【至福アロマ】全身癒し お悩み別オーダーメイド（60分）",
+          "description": "ボディトリートメント＋ボディケア＋ヘッド。お悩みに合わせてカスタマイズ。"
+        },
+        "price": "7900",
+        "priceCurrency": "JPY"
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "【至福アロマ】全身癒し お悩み別オーダーメイド（90分）",
+          "description": "ボディトリートメント＋ボディケア＋ヘッド。お悩みに合わせてカスタマイズ。"
+        },
+        "price": "9900",
+        "priceCurrency": "JPY"
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "【至福アロマ】全身癒し お悩み別オーダーメイド（120分）",
+          "description": "ボディトリートメント＋ボディケア＋ヘッド。じっくりたっぷりコース。"
+        },
+        "price": "12500",
+        "priceCurrency": "JPY"
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "極上アカスリ＋美肌フェイシャル プレミアムコース（120分）",
+          "description": "12時〜20時限定。背中や皮膚のザラつきをしっかりケア。保湿まで丁寧に。"
+        },
+        "price": "12900",
+        "priceCurrency": "JPY"
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "【毛穴洗浄×美白】 エクソソーム導入（60分）",
+          "description": "鼻の黒ずみ解消。ヒト幹細胞エクソソーム美容液で毛穴ケアと美白を同時に。"
+        },
+        "price": "9800",
+        "priceCurrency": "JPY"
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "【本格育毛促進】 髪の密度UP・毛根活性（60分）",
+          "description": "エクソソーム配合美容液＋熟練のハンド技術で頭皮環境を整え美髪へ。"
+        },
+        "price": "9800",
+        "priceCurrency": "JPY"
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "【痩身・フェイシャル】 全身マシンコース（120分）",
+          "description": "全身のボディラインと美顔を同時にアプローチ。"
+        },
+        "price": "15800",
+        "priceCurrency": "JPY"
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "【ストレッチ＋もみほぐし】 全身すっきりコース（90分）",
+          "description": "リンパの流れを意識した独自の手技と丁寧なストレッチで、むくみ・疲れ・こわばりをまとめてケア。体が硬い方や、マッサージが初めての方にも安心してお受けいただけます。"
+        },
+        "price": "9000",
+        "priceCurrency": "JPY"
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "【本格火罐カッピング】 ＋選べるオプション（60分）",
+          "description": "火を使って陰圧をつくる本格火罐（ひかん）で、深部の血流とリンパの滞りを一気に解放。その後は揉みほぐし・オイルトリートメント・毛穴フェイシャルの中からお好みで組み合わせ可能。肩こり・腰痛・疲労回復に。"
+        },
+        "price": "7900",
+        "priceCurrency": "JPY"
+      }
+    ]
+  },
   "potentialAction": {
     "@type": "ReserveAction",
     "target": {
@@ -1125,6 +1241,78 @@
     },
     "result": { "@type": "Reservation", "name": "施術のご予約" }
   }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "ご予約はどのようにすればいいですか？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "CoCosia（北千住）では、24時間受付でその場で予約が確定するネット予約が主な予約方法です。LINE公式アカウントでのご相談・ご予約や、お急ぎの場合はお電話（080-5523-9301）でも承ります。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "当日予約はできますか？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "はい、当日予約OKです。ネット予約は24時間受付でその場で確定し、お急ぎの場合はお電話（080-5523-9301）でも承ります。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "営業時間と定休日を教えてください。",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "CoCosiaの営業時間は12:00〜23:30、定休日は不定休です。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "最寄り駅からのアクセスを教えてください。",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "CoCosiaは、JR北千住駅 東口より徒歩3分です。住所は東京都足立区千住旭町11-12 GROWTH坂本 201（2階・201号室）です。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "支払い方法は何がありますか？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "CoCosiaでは、現金 / Visa / Mastercard / JCB / American Express / PayPay がご利用いただけます。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "ご予約の変更・キャンセルはできますか？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "ご予約の変更・キャンセルは前日までにご連絡ください。ネット予約分は予約ページからも変更できます。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "個室やシャワーはありますか？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "はい、CoCosiaは完全個室で、シャワー完備です。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "どんなメニューがありますか？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "CoCosiaのメニューは次のとおりです。【至福アロマ】全身癒し お悩み別オーダーメイド ¥7,900（60分）・¥9,900（90分）・¥12,500（120分）、極上アカスリ＋美肌フェイシャル プレミアムコース ¥12,900（120分）、【毛穴洗浄×美白】 エクソソーム導入 ¥9,800（60分）、【本格育毛促進】 髪の密度UP・毛根活性 ¥9,800（60分）、【痩身・フェイシャル】 全身マシンコース ¥15,800（120分）、【ストレッチ＋もみほぐし】 全身すっきりコース ¥9,000（90分）、【本格火罐カッピング】 ＋選べるオプション ¥7,900（60分）。"
+      }
+    }
+  ]
 }
 </script>
 </head>
@@ -1473,6 +1661,49 @@
       <a href="#" data-link="greviews" target="_blank" rel="noopener" class="btn-outline">Googleのクチコミをすべて見る</a>
       <a href="#" data-link="gwrite" target="_blank" rel="noopener" class="btn-outline">クチコミを書く</a>
     </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" class="faq-section">
+  <div class="faq-inner">
+    <p class="section-label">FAQ</p>
+    <h2 class="section-title">よくあるご質問</h2>
+    <div class="section-divider"></div>
+    <dl class="faq-list">
+      <div class="faq-item">
+        <dt>ご予約はどのようにすればいいですか？</dt>
+        <dd>CoCosia（北千住）では、24時間受付でその場で予約が確定する<a href="#" data-link="reserve" target="_blank" rel="noopener">ネット予約</a>が主な予約方法です。<a href="#" data-link="line" target="_blank" rel="noopener">LINE公式アカウント</a>でのご相談・ご予約や、お急ぎの場合はお電話（080-5523-9301）でも承ります。</dd>
+      </div>
+      <div class="faq-item">
+        <dt>当日予約はできますか？</dt>
+        <dd>はい、当日予約OKです。<a href="#" data-link="reserve" target="_blank" rel="noopener">ネット予約</a>は24時間受付でその場で確定し、お急ぎの場合はお電話（080-5523-9301）でも承ります。</dd>
+      </div>
+      <div class="faq-item">
+        <dt>営業時間と定休日を教えてください。</dt>
+        <dd>CoCosiaの営業時間は12:00〜23:30、定休日は不定休です。</dd>
+      </div>
+      <div class="faq-item">
+        <dt>最寄り駅からのアクセスを教えてください。</dt>
+        <dd>CoCosiaは、JR北千住駅 東口より徒歩3分です。住所は東京都足立区千住旭町11-12 GROWTH坂本 201（2階・201号室）です。</dd>
+      </div>
+      <div class="faq-item">
+        <dt>支払い方法は何がありますか？</dt>
+        <dd>CoCosiaでは、現金 / Visa / Mastercard / JCB / American Express / PayPay がご利用いただけます。</dd>
+      </div>
+      <div class="faq-item">
+        <dt>ご予約の変更・キャンセルはできますか？</dt>
+        <dd>ご予約の変更・キャンセルは前日までにご連絡ください。ネット予約分は予約ページからも変更できます。</dd>
+      </div>
+      <div class="faq-item">
+        <dt>個室やシャワーはありますか？</dt>
+        <dd>はい、CoCosiaは完全個室で、シャワー完備です。</dd>
+      </div>
+      <div class="faq-item">
+        <dt>どんなメニューがありますか？</dt>
+        <dd>CoCosiaのメニューは次のとおりです。【至福アロマ】全身癒し お悩み別オーダーメイド ¥7,900（60分）・¥9,900（90分）・¥12,500（120分）、極上アカスリ＋美肌フェイシャル プレミアムコース ¥12,900（120分）、【毛穴洗浄×美白】 エクソソーム導入 ¥9,800（60分）、【本格育毛促進】 髪の密度UP・毛根活性 ¥9,800（60分）、【痩身・フェイシャル】 全身マシンコース ¥15,800（120分）、【ストレッチ＋もみほぐし】 全身すっきりコース ¥9,000（90分）、【本格火罐カッピング】 ＋選べるオプション ¥7,900（60分）。</dd>
+      </div>
+    </dl>
   </div>
 </section>
 
