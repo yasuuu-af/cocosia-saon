@@ -1,0 +1,9 @@
+{
+  // Cloudflare Workers（静的アセットのみ）設定。GitHub 連携の自動ビルドで使用
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "cocosia",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./"
+  }
+}

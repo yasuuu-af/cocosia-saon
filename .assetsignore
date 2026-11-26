@@ -1,0 +1,8 @@
+# 公開するファイルだけを許可（それ以外はすべて非公開）
+*
+!index.html
+!blog.html
+!blog-*.html
+!google7531ad7822de1630.html
+!sitemap.xml
+!llms.txt
