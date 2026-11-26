@@ -27,11 +27,11 @@
 ## ページ
 
 - [CoCosia【ココシア】リラクゼーションサロン｜北千住](https://cocosia.relaxation-salon.workers.dev/): トップページ。メニュー・料金、ご予約、サロン情報、アクセス
-- [ブログ｜CoCosia【ココシア】リラクゼーションサロン 北千住](https://cocosia.relaxation-salon.workers.dev/blog.html): ブログ一覧
-- [おかげさまで3周年。感謝のご優待のお知らせ](https://cocosia.relaxation-salon.workers.dev/blog-3shunen.html): 3周年の感謝を込めたご優待のお知らせ
-- [本格火罐（ひかん）ってどんな施術？](https://cocosia.relaxation-salon.workers.dev/blog-hikan.html): 火罐（カッピング）の仕組みと施術の流れ
-- [デスクワークの肩こりを和らげる、3分ストレッチ](https://cocosia.relaxation-salon.workers.dev/blog-katakori-stretch.html): 肩こりの原因と3分のセルフケア
-- [LINEでのご予約をはじめました](https://cocosia.relaxation-salon.workers.dev/blog-line-yoyaku.html): 公式LINEでの予約受付開始のお知らせ
+- [ブログ｜CoCosia【ココシア】リラクゼーションサロン 北千住](https://cocosia.relaxation-salon.workers.dev/blog): ブログ一覧
+- [おかげさまで3周年。感謝のご優待のお知らせ](https://cocosia.relaxation-salon.workers.dev/blog-3shunen): 3周年の感謝を込めたご優待のお知らせ
+- [本格火罐（ひかん）ってどんな施術？](https://cocosia.relaxation-salon.workers.dev/blog-hikan): 火罐（カッピング）の仕組みと施術の流れ
+- [デスクワークの肩こりを和らげる、3分ストレッチ](https://cocosia.relaxation-salon.workers.dev/blog-katakori-stretch): 肩こりの原因と3分のセルフケア
+- [LINEでのご予約をはじめました](https://cocosia.relaxation-salon.workers.dev/blog-line-yoyaku): 公式LINEでの予約受付開始のお知らせ
 
 ## 予約・お問い合わせ
 
